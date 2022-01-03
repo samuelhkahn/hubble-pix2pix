@@ -36,8 +36,11 @@ class Pix2Pix:
         if isinstance(m, nn.BatchNorm2d):
             torch.nn.init.normal_(m.weight, 0.0, 0.02)
             torch.nn.init.constant_(m.bias, 0)
+    @staticmethod
+    def l1_loss_with_mask(x_real, x_fake,seg_map_real):
+        return torch.sum(((torch.abs(x_real-x_fake))*seg_map_real))/torch.sum(seg_map_real)
 
-    def _gen_step(self, real_images, conditioned_images):
+    def _gen_step(self, real_images, conditioned_images,seg_map_real):
         # Pix2Pix has adversarial and a reconstruction loss
         # First calculate the adversarial loss
         fake_images = self.gen(conditioned_images)
@@ -45,9 +48,9 @@ class Pix2Pix:
         adversarial_loss = self.adversarial_criterion(disc_logits, torch.ones_like(disc_logits))
 
         # calculate reconstruction loss
-        recon_loss = self.recon_criterion(fake_images, real_images)
-
+        recon_loss = self.l1_loss_with_mask(fake_images, real_images,seg_map_real)
         return adversarial_loss + self.lambda_recon * recon_loss
+
     def generate_fake_images(self, conditioned_images):
         # Pix2Pix has adversarial and a reconstruction loss
         # First calculate the adversarial loss
@@ -65,7 +68,7 @@ class Pix2Pix:
         return (real_loss + fake_loss) / 2
 
 
-    def training_step(self, real,condition, optimizer):
+    def training_step(self, real,condition,seg_map_real, optimizer):
 
         loss = None
         if optimizer == "discriminator":
@@ -74,7 +77,7 @@ class Pix2Pix:
             loss.backward()
             self.disc_opt.step()
         elif optimizer == "generator":
-            loss = self._gen_step(real, condition)
+            loss = self._gen_step(real, condition, seg_map_real)
             self.gen_opt.zero_grad()
             loss.backward()
             self.gen_opt.step()

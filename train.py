@@ -102,8 +102,8 @@ def main():
 			lr_condition = lr_condition.unsqueeze(1).to(device) # condition
 			seg_map_real = seg_map_real.unsqueeze(1).to(device)
 
-			disc_loss = pix2pix.training_step(hr_down,lr_condition,"discriminator").item()
-			gen_loss = pix2pix.training_step(hr_down,lr_condition,"generator").item()
+			disc_loss = pix2pix.training_step(hr_down,lr_condition,seg_map_real,"discriminator").item()
+			gen_loss = pix2pix.training_step(hr_down,lr_condition,seg_map_real,"generator").item()
 
 			fake_images = pix2pix.generate_fake_images(lr_condition)
 			if cur_step % display_step == 0 and cur_step > 0:
