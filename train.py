@@ -89,7 +89,7 @@ def main():
 	    batch_size=batch_size, pin_memory=True, shuffle=True, collate_fn = collate_fn)
 
 
-	pix2pix = Pix2Pix(1, 1, learning_rate=lr, lambda_recon=lambda_recon, display_step=display_step)
+	pix2pix = Pix2Pix(1, 1, device,learning_rate=lr, lambda_recon=lambda_recon, display_step=display_step)
 
 	cur_step = 0
 

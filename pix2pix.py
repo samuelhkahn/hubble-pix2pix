@@ -4,7 +4,7 @@ import torch.nn as nn
 import torch
 class Pix2Pix:
 
-    def __init__(self, in_channels, out_channels, learning_rate=0.0002, lambda_recon=200, display_step=25):
+    def __init__(self, in_channels, out_channels, device,learning_rate=0.0002, lambda_recon=200, display_step=25):
 
         super().__init__()
         
@@ -24,6 +24,11 @@ class Pix2Pix:
         #Optimizers 
         self.gen_opt = torch.optim.Adam(self.gen.parameters(), lr=self.lr)
         self.disc_opt = torch.optim.Adam(self.patch_gan.parameters(), lr=self.lr)
+
+        # put on proper device
+        self.gen.to(device)
+        self.patch_gan.to(device)
+
 
     def _weights_init(self,m):
         if isinstance(m, (nn.Conv2d, nn.ConvTranspose2d)):
