@@ -19,7 +19,9 @@ class Pix2Pix:
         self.patch_gan = self.patch_gan.apply(self._weights_init)
         # initialize Weights
         self.adversarial_criterion = nn.BCEWithLogitsLoss()
-        self.recon_criterion = nn.L1Loss()
+        self.recon_criterion_l1 = nn.L1Loss()
+        self.recon_criterion_l2 = nn.MSELoss()
+
 
         #Optimizers 
         self.gen_opt = torch.optim.Adam(self.gen.parameters(), lr=self.lr)
@@ -39,6 +41,9 @@ class Pix2Pix:
     @staticmethod
     def l1_loss_with_mask(x_real, x_fake,seg_map_real):
         return torch.sum(((torch.abs(x_real-x_fake))*seg_map_real))/torch.sum(seg_map_real)
+    @staticmethod
+    def l2_loss_with_mask(x_real, x_fake,seg_map_real):
+        return torch.sum(((x_real-x_fake)*seg_map_real)**2.0)/torch.sum(seg_map_real)
 
     def _gen_step(self, real_images, conditioned_images,seg_map_real):
         # Pix2Pix has adversarial and a reconstruction loss
@@ -48,7 +53,10 @@ class Pix2Pix:
         adversarial_loss = self.adversarial_criterion(disc_logits, torch.ones_like(disc_logits))
 
         # calculate reconstruction loss
-        recon_loss = self.l1_loss_with_mask(fake_images, real_images,seg_map_real)
+        #recon_loss = self.recon_criterion_l1(fake_images, real_images)
+        recon_loss = self.recon_criterion_l2(fake_images, real_images)
+        # recon_loss = self.l2_loss_with_mask(fake_images, real_images,seg_map_real)
+        #recon_loss = self.l1_loss_with_mask(fake_images, real_images,seg_map_real)
         return adversarial_loss + self.lambda_recon * recon_loss
 
     def generate_fake_images(self, conditioned_images):
