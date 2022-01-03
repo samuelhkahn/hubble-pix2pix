@@ -2,6 +2,7 @@ from generator import Generator
 from patchgan import PatchGAN
 import torch.nn as nn
 import torch
+from torchvision.transforms import CenterCrop
 class Pix2Pix:
 
     def __init__(self, in_channels, out_channels, device,learning_rate=0.0002, lambda_recon=200, display_step=25):
@@ -49,12 +50,18 @@ class Pix2Pix:
         # Pix2Pix has adversarial and a reconstruction loss
         # First calculate the adversarial loss
         fake_images = self.gen(conditioned_images)
+        fake_images = CenterCrop(100)(fake_images)
+        
+        #Crop off sides so not computed in loss 
+        conditioned_images = CenterCrop(100)(conditioned_images)
+        real_images = CenterCrop(100)(real_images)
         disc_logits = self.patch_gan(fake_images, conditioned_images)
+
         adversarial_loss = self.adversarial_criterion(disc_logits, torch.ones_like(disc_logits))
 
         # calculate reconstruction loss
-        #recon_loss = self.recon_criterion_l1(fake_images, real_images)
-        recon_loss = self.recon_criterion_l2(fake_images, real_images)
+        recon_loss = self.recon_criterion_l1(fake_images, real_images)
+        # recon_loss = self.recon_criterion_l2(fake_images, real_images)
         # recon_loss = self.l2_loss_with_mask(fake_images, real_images,seg_map_real)
         #recon_loss = self.l1_loss_with_mask(fake_images, real_images,seg_map_real)
         return adversarial_loss + self.lambda_recon * recon_loss
@@ -67,6 +74,12 @@ class Pix2Pix:
         return fake_images
     def _disc_step(self, real_images, conditioned_images):
         fake_images = self.gen(conditioned_images).detach()
+
+        #Crop off sides so not computed in loss 
+        fake_images = CenterCrop(100)(fake_images)
+        conditioned_images = CenterCrop(100)(conditioned_images)
+        real_images = CenterCrop(100)(real_images)
+
         fake_logits = self.patch_gan(fake_images, conditioned_images)
 
         real_logits = self.patch_gan(real_images, conditioned_images)
