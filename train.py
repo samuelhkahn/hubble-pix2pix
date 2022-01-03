@@ -118,7 +118,7 @@ def main():
 
 				log_figure(real.detach().numpy(),"Real Image",experiment)
 				log_figure(lr_condition.detach().numpy(),"Condition Image",experiment)
-				log_figure(lr_condition.detach().numpy(),"Generate Image",experiment)
+				log_figure(fake.detach().numpy(),"Generate Image",experiment)
 				log_figure(img_diff.detach().numpy(),"Paired Image Difference",experiment,cmap="bwr_r")
 
 
