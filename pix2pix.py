@@ -50,8 +50,8 @@ class Pix2Pix:
         # Pix2Pix has adversarial and a reconstruction loss
         # First calculate the adversarial loss
         fake_images = self.gen(conditioned_images)
-        #Crop off sides so not computed in loss 
 
+        #Crop off sides so not computed in loss 
         fake_images = CenterCrop(100)(fake_images)
         conditioned_images = CenterCrop(100)(conditioned_images)
         real_images = CenterCrop(100)(real_images)
@@ -68,11 +68,10 @@ class Pix2Pix:
         return adversarial_loss + self.lambda_recon * recon_loss
 
     def generate_fake_images(self, conditioned_images):
-        # Pix2Pix has adversarial and a reconstruction loss
-        # First calculate the adversarial loss
+        # Generate image for plotting
         fake_images = self.gen(conditioned_images)
-
         return fake_images
+
     def _disc_step(self, real_images, conditioned_images):
         fake_images = self.gen(conditioned_images).detach()
 
