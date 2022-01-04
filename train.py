@@ -54,9 +54,13 @@ def main():
 	hsc_path = config["DEFAULT"]["hsc_path"]
 
 	comet_tag = config["COMET_TAG"]["comet_tag"]
+	model_name = config["MODEL_NAME"]["model_name"]
+
 
 	batch_size = int(config["BATCH_SIZE"]["batch_size"])
 	total_steps = int(config["GAN_STEPS"]["gan_steps"])
+	save_steps = int(config["SAVE_STEPS"]["save_steps"])
+
 
 	data_aug = eval(config["DATA_AUG"]["data_aug"])
 
@@ -67,6 +71,7 @@ def main():
 	lr = eval(config["LR"]["lr"])
 	lambda_recon = eval(config["LAMBDA_RECON"]["Lambda_recon"])
 
+	disc_update_freq = int(config["DISC_UPDATE_FREQ"]["disc_update_freq"])
 
 
 	# Adding Comet Logging
@@ -102,11 +107,14 @@ def main():
 			lr_condition = lr_condition.unsqueeze(1).to(device) # condition
 			seg_map_real = seg_map_real.unsqueeze(1).to(device)
 
-			disc_loss = pix2pix.training_step(hr_down,lr_condition,seg_map_real,"discriminator").item()
+			if cur_step%disc_update_freq==0:
+				disc_loss = pix2pix.training_step(hr_down,lr_condition,seg_map_real,"discriminator").item()
+
 			gen_loss = pix2pix.training_step(hr_down,lr_condition,seg_map_real,"generator").item()
 
-			fake_images = pix2pix.generate_fake_images(lr_condition)
 			if cur_step % display_step == 0 and cur_step > 0:
+				fake_images = pix2pix.generate_fake_images(lr_condition)
+
 				print('Step: {}, Generator loss: {:.5f}, Discriminator loss: {:.5f}'.format(cur_step,gen_loss, disc_loss))
 
 				real = hr_down[0,:,:,:].squeeze(0).cpu()
@@ -124,6 +132,11 @@ def main():
 
 				experiment.log_metric("Generator Loss",gen_loss)
 				experiment.log_metric("Discriminator Loss",disc_loss)
+			if cur_step % save_steps == 0 and cur_step > 0:
+				torch.save(pix2pix.gen, f'gen_pix2pix_{model_name}_checkpoint_{cur_step}.pt')
+				torch.save(pix2pix.patch_gan, f'patchgan_pix2pix_{model_name}_checkpoint_{cur_step}.pt')
+				pix2pix.gen
+
 
 			cur_step+=1
 
