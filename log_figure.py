@@ -2,17 +2,23 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from astropy.visualization import simple_norm
 
-def log_figure(img,fig_name,experiment,cmap="plasma"):
+def log_figure(img,fig_name,experiment,cmap="plasma",set_lims=False,lims=[-1,1]):
 	f, ax = plt.subplots()
 
-
-	im = ax.imshow(
-	    img, 
-	    cmap="plasma", # or whatever colormap you want
-	    origin="lower",
-	        #stretch can be also be {‘linear’, ‘sqrt’, ‘power’, log’, ‘asinh’}
-	    norm=simple_norm(img, stretch="linear")
-	)
+	if set_lims == False:
+		im = ax.imshow(
+		    img, 
+		    cmap=cmap, # or whatever colormap you want
+		    origin="lower",
+		        #stretch can be also be {‘linear’, ‘sqrt’, ‘power’, log’, ‘asinh’}
+		    norm=simple_norm(img, stretch="linear")
+		)
+	else:
+		im = ax.imshow(
+    	img,
+    	cmap=cmap,
+    	vmin=lims[0],
+    	vmax=lims[1])
 
 	divider = make_axes_locatable(ax)
 	cax = divider.append_axes('right', size='5%', pad=0.05)
