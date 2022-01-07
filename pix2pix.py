@@ -15,7 +15,8 @@ class Pix2Pix:
                       display_step=25):
 
         super().__init__()
-        
+
+        self.device = device
         self.display_step = display_step
         self.gen = Generator(in_channels, out_channels)
         self.patch_gan = PatchGAN(in_channels + out_channels)
@@ -31,7 +32,8 @@ class Pix2Pix:
         self.adversarial_criterion = nn.BCEWithLogitsLoss()
         self.recon_criterion_l1 = nn.L1Loss()
         self.recon_criterion_l2 = nn.MSELoss()
-        self.vgg_criterion = VGGLoss()
+        self.vgg_criterion = VGGLoss(self.device)
+
 
 
 
@@ -39,9 +41,9 @@ class Pix2Pix:
         self.gen_opt = torch.optim.Adam(self.gen.parameters(), lr=self.lr)
         self.disc_opt = torch.optim.Adam(self.patch_gan.parameters(), lr=self.lr)
 
-        # put on proper device
-        self.gen.to(device)
-        self.patch_gan.to(device)
+        # put models on proper device
+        self.gen.to(self.device)
+        self.patch_gan.to(self.device)
 
 
     def _weights_init(self,m):
