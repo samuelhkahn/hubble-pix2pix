@@ -69,7 +69,8 @@ def main():
 	display_step = eval(config["DISPLAY_STEPS"]["display_steps"])
 
 	lr = eval(config["LR"]["lr"])
-	lambda_recon = eval(config["LAMBDA_RECON"]["Lambda_recon"])
+	lambda_recon = eval(config["LAMBDA_RECON"]["lambda_recon"])
+	lambda_vgg = eval(config["LAMBDA_VGG"]["lambda_vgg"])
 
 	disc_update_freq = int(config["DISC_UPDATE_FREQ"]["disc_update_freq"])
 
@@ -94,7 +95,7 @@ def main():
 	    batch_size=batch_size, pin_memory=True, shuffle=True, collate_fn = collate_fn)
 
 
-	pix2pix = Pix2Pix(1, 1, device,learning_rate=lr, lambda_recon=lambda_recon, display_step=display_step)
+	pix2pix = Pix2Pix(1, 1, device,learning_rate=lr, lambda_recon=lambda_recon, lambda_vgg=lambda_vgg, display_step=display_step)
 
 	cur_step = 0
 

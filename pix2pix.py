@@ -3,9 +3,16 @@ from patchgan import PatchGAN
 import torch.nn as nn
 import torch
 from torchvision.transforms import CenterCrop
+from vgg19_loss import VGGLoss
 class Pix2Pix:
 
-    def __init__(self, in_channels, out_channels, device,learning_rate=0.0002, lambda_recon=200, display_step=25):
+    def __init__(self, in_channels, 
+                      out_channels, 
+                      device,
+                      learning_rate=0.0002, 
+                      lambda_recon=200, 
+                      lambda_vgg = 200,
+                      display_step=25):
 
         super().__init__()
         
@@ -15,6 +22,8 @@ class Pix2Pix:
 
         self.lr = learning_rate
         self.lambda_recon = lambda_recon
+        self.lambda_vgg = lambda_vgg
+
         # intializing weights
         self.gen = self.gen.apply(self._weights_init)
         self.patch_gan = self.patch_gan.apply(self._weights_init)
@@ -22,6 +31,8 @@ class Pix2Pix:
         self.adversarial_criterion = nn.BCEWithLogitsLoss()
         self.recon_criterion_l1 = nn.L1Loss()
         self.recon_criterion_l2 = nn.MSELoss()
+        self.vgg_criterion = VGGLoss()
+
 
 
         #Optimizers 
@@ -62,10 +73,10 @@ class Pix2Pix:
 
         # calculate reconstruction loss
         #recon_loss = self.recon_criterion_l1(fake_images, real_images)
-        recon_loss = self.recon_criterion_l2(fake_images, real_images)
-        # recon_loss = self.l2_loss_with_mask(fake_images, real_images,seg_map_real)
-        #recon_loss = self.l1_loss_with_mask(fake_images, real_images,seg_map_real)
-        return adversarial_loss + self.lambda_recon * recon_loss
+        recon_loss = self.recon_criterion_l1(fake_images, real_images)
+        vgg_loss = self.vgg_criterion(fake_images, real_images)
+
+        return adversarial_loss + self.lambda_recon*recon_loss + self.lambda_vgg*vgg_loss
 
     def generate_fake_images(self, conditioned_images):
         # Generate image for plotting
