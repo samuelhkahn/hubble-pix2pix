@@ -19,9 +19,12 @@ from skimage.filters import gaussian
 from sklearn.preprocessing import minmax_scale
 from torchvision.transforms.functional import InterpolationMode as IMode
 class SquarePad:
+    def __init__(self,padding,padding_mode):
+        self.padding = padding
+        self.padding_mode = padding_mode
+        
     def __call__(self, image):
-
-        return TF.pad(image, 14, 0, 'constant')
+        return TF.pad(image, padding = self.padding,padding_mode = self.padding_mode)
 
 
 class SR_HST_HSC_Dataset(Dataset):
@@ -43,15 +46,6 @@ class SR_HST_HSC_Dataset(Dataset):
             assert hr_size[1] == 6 * lr_size[1]
 
 
-        self.hsc_std = 0.04180176637927356
-        self.hst_std = 0.0010912614529011736
-
-        self.median_scale = 0.32154497558051215
-        self.mean_scale = 0.31601302214882165
-
-        self.hst_median = 2.696401406865334e-05
-        self.hsc_median = 1.4194287359714508e-05
-
         self.hst_path = hst_path
         self.hsc_path = hsc_path
 
@@ -64,25 +58,20 @@ class SR_HST_HSC_Dataset(Dataset):
         self.to_pil = transforms.ToPILImage()
         self.to_tensor = transforms.ToTensor()
 
-        # HST clip range - (0,99.996)
-        self.hst_min,self.hst_max = (-4.656636714935303, 0.11904790546745403)
-
-        # HSC clip range - (0,99.9)
-        self.hsc_min,self.hsc_max = (-0.4692089855670929, 12.432257434845326)
 
         self.lr_transforms = transforms.Compose([
             transforms.ToPILImage(),
             transforms.Resize(100, interpolation=IMode.BICUBIC)
         ])
-
+        self.square_pad = SquarePad(14,"reflect")
         # now use it as the replacement of transforms.Pad class
         self.pad_array=transforms.Compose([
             transforms.ToPILImage(),
-            SquarePad(),
+            self.square_pad,
             transforms.Resize(128)
         ])
         self.pad_pil=transforms.Compose([
-            SquarePad(),
+            self.square_pad,
             transforms.Resize(128)
         ])
         
