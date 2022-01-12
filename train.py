@@ -130,7 +130,7 @@ def main():
 				log_figure(real.detach().numpy(),"Real Image",experiment)
 				log_figure(lr_condition.detach().numpy(),"Condition Image",experiment)
 				log_figure(fake.detach().numpy(),"Generate Image",experiment)
-				log_figure(img_diff,"Paired Image Difference",experiment,cmap="bwr_r",lims=[-vmax,vmax])
+				log_figure(img_diff,"Paired Image Difference",experiment,cmap="bwr_r",set_lims=True,lims=[-vmax,vmax])
 
 
 				experiment.log_metric("Generator Loss",gen_loss)

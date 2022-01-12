@@ -6,19 +6,9 @@ def log_figure(img,fig_name,experiment,cmap="plasma",set_lims=False,lims=[-1,1])
 	f, ax = plt.subplots()
 
 	if set_lims == False:
-		im = ax.imshow(
-		    img, 
-		    cmap=cmap, # or whatever colormap you want
-		    origin="lower",
-		        #stretch can be also be {‘linear’, ‘sqrt’, ‘power’, log’, ‘asinh’}
-		    norm=simple_norm(img, stretch="linear")
-		)
+		im = ax.imshow(img,cmap=cmap, origin="lower",norm=simple_norm(img, stretch="linear"))
 	else:
-		im = ax.imshow(
-    	img,
-    	cmap=cmap,
-    	vmin=lims[0],
-    	vmax=lims[1])
+		im = ax.imshow(img,cmap=cmap,vmin=lims[0],vmax=lims[1])
 
 	divider = make_axes_locatable(ax)
 	cax = divider.append_axes('right', size='5%', pad=0.05)
