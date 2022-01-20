@@ -77,8 +77,8 @@ class Pix2Pix:
         #recon_loss = self.recon_criterion_l1(fake_images, real_images)
         recon_loss = self.recon_criterion_l1(fake_images, real_images)
         vgg_loss = self.vgg_criterion(fake_images, real_images)
-
-        return adversarial_loss + self.lambda_recon*recon_loss + self.lambda_vgg*vgg_loss
+        total_loss = adversarial_loss + self.lambda_recon*recon_loss + self.lambda_vgg*vgg_loss
+        return total_loss,recon_loss,vgg_loss
 
     def generate_fake_images(self, conditioned_images):
         # Generate image for plotting
@@ -110,9 +110,10 @@ class Pix2Pix:
             self.disc_opt.zero_grad()
             loss.backward()
             self.disc_opt.step()
+            return loss
         elif optimizer == "generator":
-            loss = self._gen_step(real, condition, seg_map_real)
+            loss,recon,vgg = self._gen_step(real, condition, seg_map_real)
             self.gen_opt.zero_grad()
             loss.backward()
             self.gen_opt.step()
-        return loss
+            return loss,recon,vgg

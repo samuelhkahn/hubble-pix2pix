@@ -7,6 +7,7 @@ from dataset import SR_HST_HSC_Dataset
 import numpy as np
 import configparser
 from log_figure import log_figure
+from torchvision.transforms import CenterCrop
 
 
 # Load file paths from config
@@ -111,8 +112,8 @@ def main():
 			if cur_step%disc_update_freq==0:
 				disc_loss = pix2pix.training_step(hr_down,lr_condition,seg_map_real,"discriminator").item()
 
-			gen_loss = pix2pix.training_step(hr_down,lr_condition,seg_map_real,"generator").item()
-
+			gen_loss,recon_loss,vgg_loss = pix2pix.training_step(hr_down,lr_condition,seg_map_real,"generator")
+			gen_loss,recon_loss,vgg_loss = gen_loss.item(),recon_loss.item(),vgg_loss.item()
 			if cur_step % display_step == 0 and cur_step > 0:
 				fake_images = pix2pix.generate_fake_images(lr_condition)
 
@@ -128,13 +129,17 @@ def main():
 
 
 				log_figure(real.detach().numpy(),"Real Image",experiment)
-				log_figure(lr_condition.detach().numpy(),"Condition Image",experiment)
-				log_figure(fake.detach().numpy(),"Generate Image",experiment)
+				log_figure(lr_condition.detach().numpy(),"Conditioned Image",experiment)
+				log_figure(fake.detach().numpy(),"Generated Image",experiment)
+				log_figure(CenterCrop(100)(lr_condition).detach().numpy(),"100x100 Conditioned Image",experiment)
+				log_figure(CenterCrop(100)(fake).detach().numpy(),"100x100 Generated Image",experiment)
 				log_figure(img_diff,"Paired Image Difference",experiment,cmap="bwr_r",set_lims=True,lims=[-vmax,vmax])
 
 
 				experiment.log_metric("Generator Loss",gen_loss)
 				experiment.log_metric("Discriminator Loss",disc_loss)
+				experiment.log_metric("VGG Loss",vgg_loss)
+				experiment.log_metric("L1 Reconstriction Loss",recon_loss)
 			if cur_step % save_steps == 0 and cur_step > 0:
 				torch.save(pix2pix.gen, f'gen_pix2pix_{model_name}_checkpoint_{cur_step}.pt')
 				torch.save(pix2pix.patch_gan, f'patchgan_pix2pix_{model_name}_checkpoint_{cur_step}.pt')
