@@ -72,6 +72,8 @@ def main():
 	lr = eval(config["LR"]["lr"])
 	lambda_recon = eval(config["LAMBDA_RECON"]["lambda_recon"])
 	lambda_vgg = eval(config["LAMBDA_VGG"]["lambda_vgg"])
+	lambda_scattering = eval(config["LAMBDA_SCATTERING"]["lambda_scattering"])
+
 
 	disc_update_freq = int(config["DISC_UPDATE_FREQ"]["disc_update_freq"])
 
@@ -96,7 +98,15 @@ def main():
 	    batch_size=batch_size, pin_memory=True, shuffle=True, collate_fn = collate_fn)
 
 
-	pix2pix = Pix2Pix(1, 1, device,learning_rate=lr, lambda_recon=lambda_recon, lambda_vgg=lambda_vgg, display_step=display_step)
+	pix2pix = Pix2Pix(in_channels = 1, 
+					 out_channels = 1,
+					 input_size =100, 
+					 device = device,
+					 learning_rate=lr, 
+					 lambda_recon=lambda_recon, 
+					 lambda_vgg=lambda_vgg, 
+					 lambda_scattering=lambda_scattering, 
+					 display_step=display_step)
 
 	cur_step = 0
 
@@ -112,8 +122,15 @@ def main():
 			if cur_step%disc_update_freq==0:
 				disc_loss = pix2pix.training_step(hr_down,lr_condition,seg_map_real,"discriminator").item()
 
-			gen_loss,recon_loss,vgg_loss = pix2pix.training_step(hr_down,lr_condition,seg_map_real,"generator")
-			gen_loss,recon_loss,vgg_loss = gen_loss.item(),recon_loss.item(),vgg_loss.item()
+			losses = pix2pix.training_step(hr_down,lr_condition,seg_map_real,"generator")
+
+
+			gen_loss,adv_loss,recon_loss,vgg_loss,scattering_loss = losses[0].item(),\
+																	losses[1].item(),\
+																	losses[2].item(),\
+																	losses[3].item(),\
+																	losses[4].item()
+
 			if cur_step % display_step == 0 and cur_step > 0:
 				fake_images = pix2pix.generate_fake_images(lr_condition)
 
@@ -140,6 +157,10 @@ def main():
 				experiment.log_metric("Discriminator Loss",disc_loss)
 				experiment.log_metric("VGG Loss",vgg_loss)
 				experiment.log_metric("L1 Reconstriction Loss",recon_loss)
+				experiment.log_metric("L1 Scattereing Loss",scattering_loss)
+				experiment.log_metric("Adversarial Loss",adv_loss)
+
+
 			if cur_step % save_steps == 0 and cur_step > 0:
 				torch.save(pix2pix.gen, f'gen_pix2pix_{model_name}_checkpoint_{cur_step}.pt')
 				torch.save(pix2pix.patch_gan, f'patchgan_pix2pix_{model_name}_checkpoint_{cur_step}.pt')

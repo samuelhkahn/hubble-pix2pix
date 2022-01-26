@@ -4,14 +4,19 @@ import torch.nn as nn
 import torch
 from torchvision.transforms import CenterCrop
 from vgg19_loss import VGGLoss
+from kymatio.torch import Scattering2D
+
 class Pix2Pix:
 
-    def __init__(self, in_channels, 
-                      out_channels, 
+    def __init__(self,in_channels, 
+                      out_channels,
+                      input_size,
                       device,
                       learning_rate=0.0002, 
                       lambda_recon=200, 
                       lambda_vgg = 200,
+                      lambda_scattering = 1,
+
                       display_step=25):
 
         super().__init__()
@@ -24,18 +29,19 @@ class Pix2Pix:
         self.lr = learning_rate
         self.lambda_recon = lambda_recon
         self.lambda_vgg = lambda_vgg
+        self.lambda_scattering = lambda_scattering
+
 
         # intializing weights
         self.gen = self.gen.apply(self._weights_init)
         self.patch_gan = self.patch_gan.apply(self._weights_init)
-        # initialize Weights
+
+        #Loss functions 
         self.adversarial_criterion = nn.BCEWithLogitsLoss()
         self.recon_criterion_l1 = nn.L1Loss()
         self.recon_criterion_l2 = nn.MSELoss()
         self.vgg_criterion = VGGLoss(self.device)
-
-
-
+        self.scattering_f = Scattering2D(J=3, L=8,shape=(input_size, input_size), out_type="array",max_order=2)
 
         #Optimizers 
         self.gen_opt = torch.optim.Adam(self.gen.parameters(), lr=self.lr)
@@ -77,8 +83,18 @@ class Pix2Pix:
         #recon_loss = self.recon_criterion_l1(fake_images, real_images)
         recon_loss = self.recon_criterion_l1(fake_images, real_images)
         vgg_loss = self.vgg_criterion(fake_images, real_images)
-        total_loss = adversarial_loss + self.lambda_recon*recon_loss + self.lambda_vgg*vgg_loss
-        return total_loss,recon_loss,vgg_loss
+
+        #wavlet scattering loss
+        scat_real = self.scattering_f(real_images.contiguous()).squeeze(1)
+        scat_fake = self.scattering_f(fake_images.contiguous()).squeeze(1)
+
+        scattering_loss = (scat_real - scat_fake).abs().sum(axis=(1, 2, 3)).mean()
+
+        total_loss = adversarial_loss\
+                     + self.lambda_recon*recon_loss\
+                     + self.lambda_vgg*vgg_loss\
+                     + self.lambda_scattering*scattering_loss
+        return total_loss,adversarial_loss,recon_loss,vgg_loss,scattering_loss
 
     def generate_fake_images(self, conditioned_images):
         # Generate image for plotting
@@ -112,8 +128,8 @@ class Pix2Pix:
             self.disc_opt.step()
             return loss
         elif optimizer == "generator":
-            loss,recon,vgg = self._gen_step(real, condition, seg_map_real)
+            total_loss,adversarial_loss,recon_loss,vgg_loss,scattering_loss = self._gen_step(real, condition, seg_map_real)
             self.gen_opt.zero_grad()
-            loss.backward()
+            total_loss.backward()
             self.gen_opt.step()
-            return loss,recon,vgg
+            return total_loss,adversarial_loss,recon_loss,vgg_loss,scattering_loss
