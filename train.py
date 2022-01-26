@@ -162,8 +162,8 @@ def main():
 
 
 			if cur_step % save_steps == 0 and cur_step > 0:
-				torch.save(pix2pix.gen, f'gen_pix2pix_{model_name}_checkpoint_{cur_step}.pt')
-				torch.save(pix2pix.patch_gan, f'patchgan_pix2pix_{model_name}_checkpoint_{cur_step}.pt')
+				torch.save(pix2pix.gen, f'models/gen_pix2pix_{model_name}_checkpoint_{cur_step}.pt')
+				torch.save(pix2pix.patch_gan, f'models/patchgan_pix2pix_{model_name}_checkpoint_{cur_step}.pt')
 
 
 			cur_step+=1
