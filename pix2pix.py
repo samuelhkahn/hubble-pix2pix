@@ -41,7 +41,7 @@ class Pix2Pix:
         self.recon_criterion_l1 = nn.L1Loss()
         self.recon_criterion_l2 = nn.MSELoss()
         self.vgg_criterion = VGGLoss(self.device)
-        self.scattering_f = Scattering2D(J=3, L=8,shape=(input_size, input_size), out_type="array",max_order=2)
+        self.scattering_f = Scattering2D(J=3, L=8,shape=(input_size, input_size), out_type="array",max_order=2).to(device)
 
         #Optimizers 
         self.gen_opt = torch.optim.Adam(self.gen.parameters(), lr=self.lr)
