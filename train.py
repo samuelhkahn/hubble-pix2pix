@@ -150,6 +150,8 @@ def main():
 				log_figure(fake.detach().numpy(),"Generated Image",experiment)
 				log_figure(CenterCrop(100)(lr_condition).detach().numpy(),"100x100 Conditioned Image",experiment)
 				log_figure(CenterCrop(100)(fake).detach().numpy(),"100x100 Generated Image",experiment)
+				log_figure(CenterCrop(100)(real).detach().numpy(),"100x100 Real Image",experiment)
+
 				log_figure(img_diff,"Paired Image Difference",experiment,cmap="bwr_r",set_lims=True,lims=[-vmax,vmax])
 
 
