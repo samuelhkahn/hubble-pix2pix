@@ -85,8 +85,9 @@ class Pix2Pix:
         vgg_loss = self.vgg_criterion(fake_images, real_images)
 
         #wavlet scattering loss
-        scat_real = self.scattering_f(real_images.contiguous()).squeeze(1)
-        scat_fake = self.scattering_f(fake_images.contiguous()).squeeze(1)
+        scat_real = self.scattering_f(real_images.contiguous()).squeeze(1)[:,1:,:,:]
+        scat_fake = self.scattering_f(fake_images.contiguous()).squeeze(1)[:,1:,:,:]
+
 
         scattering_loss = (scat_real - scat_fake).abs().sum(axis=(1, 2, 3)).mean()
 
