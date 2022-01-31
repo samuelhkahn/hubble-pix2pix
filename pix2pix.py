@@ -91,10 +91,12 @@ class Pix2Pix:
 
         scattering_loss = (scat_real - scat_fake).abs().sum(axis=(1, 2, 3)).mean()
 
-        total_loss = adversarial_loss\
+        total_loss = self.lr*(adversarial_loss\
                      + self.lambda_recon*recon_loss\
                      + self.lambda_vgg*vgg_loss\
-                     + self.lambda_scattering*scattering_loss
+                     + self.lambda_scattering*scattering_loss)
+
+        
         return total_loss,adversarial_loss,recon_loss,vgg_loss,scattering_loss
 
     def generate_fake_images(self, conditioned_images):
