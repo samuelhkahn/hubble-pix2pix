@@ -1,9 +1,12 @@
 import torch
 from torchvision import models
+from torchvision import transforms
 class Vgg19(torch.nn.Module):
     def __init__(self, requires_grad=False):
         super(Vgg19, self).__init__()
         vgg_pretrained_features = models.vgg19(pretrained=True).features
+        self.normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                         std=[0.229, 0.224, 0.225])
         self.slice1 = torch.nn.Sequential()
         self.slice2 = torch.nn.Sequential()
         self.slice3 = torch.nn.Sequential()
@@ -33,6 +36,8 @@ class Vgg19(torch.nn.Module):
     def forward(self, X):
         X = self._tensor_zero_one_transform(X)
         X = self._duplicate_channels(X)
+        X= self.normalize(X)
+
         h_relu1 = self.slice1(X)
         h_relu2 = self.slice2(h_relu1)        
         h_relu3 = self.slice3(h_relu2)        
