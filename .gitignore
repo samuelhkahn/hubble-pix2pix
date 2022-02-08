@@ -1,3 +1,4 @@
+comet_asset_cleanup.py
 models/
 *pt
 __pycache__
