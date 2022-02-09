@@ -89,7 +89,18 @@ def main():
 	)
 
 	experiment.add_tag(comet_tag)
-	
+	# Log Hyperparemeters
+	experiment.log_parameter("batch_size",batch_size)
+	experiment.log_parameter("total_steps",total_steps)
+	experiment.log_parameter("save_steps",save_steps)
+	experiment.log_parameter("data_aug",data_aug)
+	experiment.log_parameter("display_step",display_step)
+	experiment.log_parameter("lr",lr)
+	experiment.log_parameter("lambda_recon",lambda_recon)
+	experiment.log_parameter("lambda_vgg",lambda_vgg)
+	experiment.log_parameter("lambda_scattering",lambda_scattering)
+	experiment.log_parameter("disc_update_freq",disc_update_freq)
+
 
 	# Create Dataloader
 	dataloader = torch.utils.data.DataLoader(
