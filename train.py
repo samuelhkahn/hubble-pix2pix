@@ -141,7 +141,7 @@ def main():
 				fake = fake_images[0,0,:,:].double().cpu()
 
 
-				img_diff = (fake - real).cpu().detach().numpy()
+				img_diff = CenterCrop(100)(fake - real).cpu().detach().numpy()
 				vmax = np.abs(img_diff).max()
 
 
