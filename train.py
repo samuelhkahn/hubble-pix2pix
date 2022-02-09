@@ -55,8 +55,6 @@ def main():
 	hsc_path = config["DEFAULT"]["hsc_path"]
 
 	comet_tag = config["COMET_TAG"]["comet_tag"]
-	model_name = config["MODEL_NAME"]["model_name"]
-
 
 	batch_size = int(config["BATCH_SIZE"]["batch_size"])
 	total_steps = int(config["GAN_STEPS"]["gan_steps"])
@@ -73,6 +71,7 @@ def main():
 	lambda_recon = eval(config["LAMBDA_RECON"]["lambda_recon"])
 	lambda_vgg = eval(config["LAMBDA_VGG"]["lambda_vgg"])
 	lambda_scattering = eval(config["LAMBDA_SCATTERING"]["lambda_scattering"])
+	lambda_adv = eval(config["LAMBDA_ADV"]["lambda_adv"])
 
 
 	disc_update_freq = int(config["DISC_UPDATE_FREQ"]["disc_update_freq"])
@@ -99,9 +98,11 @@ def main():
 	experiment.log_parameter("lambda_recon",lambda_recon)
 	experiment.log_parameter("lambda_vgg",lambda_vgg)
 	experiment.log_parameter("lambda_scattering",lambda_scattering)
+	experiment.log_parameter("lambda_adv",lambda_adv)
 	experiment.log_parameter("disc_update_freq",disc_update_freq)
 
-
+	model_name = f"global_lr={lr}_recon={lambda_recon}_vgg={lambda_vgg}_scatter={lambda_scattering}_adv={lambda_adv}_discupdate={disc_update_freq}"
+	
 	# Create Dataloader
 	dataloader = torch.utils.data.DataLoader(
 	    SR_HST_HSC_Dataset(hst_path = hst_path , hsc_path = hsc_path, hr_size=[hst_dim, hst_dim], 
@@ -116,7 +117,8 @@ def main():
 					 learning_rate=lr, 
 					 lambda_recon=lambda_recon, 
 					 lambda_vgg=lambda_vgg, 
-					 lambda_scattering=lambda_scattering, 
+					 lambda_scattering=lambda_scattering,
+					 lambda_adv=lambda_adv, 
 					 display_step=display_step)
 
 	cur_step = 0

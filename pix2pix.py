@@ -16,7 +16,7 @@ class Pix2Pix:
                       lambda_recon=200, 
                       lambda_vgg = 200,
                       lambda_scattering = 1,
-
+                      lambda_adv = 5,
                       display_step=25):
 
         super().__init__()
@@ -26,10 +26,12 @@ class Pix2Pix:
         self.gen = Generator(in_channels, out_channels)
         self.patch_gan = PatchGAN(in_channels + out_channels)
 
+        # Loss component weights
         self.lr = learning_rate
         self.lambda_recon = lambda_recon
         self.lambda_vgg = lambda_vgg
         self.lambda_scattering = lambda_scattering
+        self.lambda_adv = lambda_adv
 
 
         # intializing weights
@@ -42,6 +44,7 @@ class Pix2Pix:
         self.recon_criterion_l2 = nn.MSELoss()
         self.vgg_criterion = VGGLoss(self.device)
         self.scattering_f = Scattering2D(J=3, L=8,shape=(input_size, input_size), out_type="array",max_order=2).to(device)
+
 
         #Optimizers 
         self.gen_opt = torch.optim.Adam(self.gen.parameters(), lr=self.lr)
