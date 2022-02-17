@@ -46,23 +46,32 @@ class Generator(nn.Module):
         self.decoders = nn.ModuleList(self.decoders)
 
     def forward(self, x):
-
+        # Original Image
         x_in = x 
+
+        # Encode & Skip Connections
         skips_cons = []
         for encoder in self.encoders:
             x = encoder(x)
             skips_cons.append(x)
-
+        #Reverse for expansion phase
         skips_cons = list(reversed(skips_cons[:-1]))
+
+        # Run expansion phase through decoder n-1
         decoders = self.decoders[:-1]
         for decoder, skip in zip(decoders, skips_cons):
             x = decoder(x)
             x = torch.cat((x, skip), axis=1)
+        # Last decoder 
         x = self.decoders[-1](x)
-        # x = torch.cat((x, x_in), axis=1)sss
-        # print(x.shape)
+
+        #Up sample
         x = self.up_conv(x)
+
+        # Add input image (HSC) as "skip connection"
         x = torch.cat((x, x_in), axis=1)
+
+        # final conv to go from 2->1 channels
         x = self.final_conv(x)
 
 
