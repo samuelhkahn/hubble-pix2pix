@@ -37,25 +37,33 @@ class Generator(nn.Module):
             UpSampleConv(256, 64),  # bs x 64 x 128 x 128
         ]
         self.decoder_channels = [512, 512, 512, 512, 256, 128, 64]
-        self.final_conv = nn.ConvTranspose2d(64, out_channels, kernel_size=4, stride=2, padding=1)
+        self.up_conv = nn.ConvTranspose2d(64, out_channels, kernel_size=4, stride=2, padding=1)
+        self.final_conv = nn.Conv2d(2, 1, kernel_size=1, stride=1, padding=0)
+
         self.tanh = nn.Tanh()
 
         self.encoders = nn.ModuleList(self.encoders)
         self.decoders = nn.ModuleList(self.decoders)
 
     def forward(self, x):
+
+        x_in = x 
         skips_cons = []
         for encoder in self.encoders:
-
             x = encoder(x)
             skips_cons.append(x)
+
         skips_cons = list(reversed(skips_cons[:-1]))
         decoders = self.decoders[:-1]
         for decoder, skip in zip(decoders, skips_cons):
             x = decoder(x)
             x = torch.cat((x, skip), axis=1)
         x = self.decoders[-1](x)
+        # x = torch.cat((x, x_in), axis=1)sss
         # print(x.shape)
+        x = self.up_conv(x)
+        x = torch.cat((x, x_in), axis=1)
         x = self.final_conv(x)
+
 
         return self.tanh(x)
