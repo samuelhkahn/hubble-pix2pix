@@ -38,7 +38,7 @@ class Generator(nn.Module):
             UpSampleConv(256, 64),  # bs x 64 x 128 x 128
         ]
         self.decoder_channels = [512, 512, 512, 512, 256, 128, 64]
-        self.up_conv = nn.ConvTranspose2d(64, out_channels, kernel_size=4, stride=2, padding=1)
+        self.up_conv = nn.ConvTranspose2d(64, out_channels, kernel_size=3, stride=2, padding=1,output_padding=1)
         self.final_conv = nn.Conv2d(2, 1, kernel_size=1, stride=1, padding=0)
 
         self.tanh = nn.Tanh()
