@@ -1,3 +1,4 @@
+
 import torch.nn as nn
 from down_sample_conv import DownSampleConv
 from up_sample_conv import UpSampleConv
@@ -28,7 +29,7 @@ class Generator(nn.Module):
 
         # decoder/upsample convs
         self.decoders = [
-            UpSampleConv(512, 512, dropout=True),  # bs x 512 x 2 x 2
+            UpSampleConv(512, 512,  dropout=True),  # bs x 512 x 2 x 2
             UpSampleConv(1024, 512, dropout=True),  # bs x 512 x 4 x 4
             # UpSampleConv(1024, 512, dropout=True),  # bs x 512 x 8 x 8
             UpSampleConv(1024, 512),  # bs x 512 x 16 x 16
@@ -73,6 +74,5 @@ class Generator(nn.Module):
 
         # final conv to go from 2->1 channels
         x = self.final_conv(x)
-
 
         return self.tanh(x)

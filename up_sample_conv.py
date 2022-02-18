@@ -6,9 +6,10 @@ class UpSampleConv(nn.Module):
         self,
         in_channels,
         out_channels,
-        kernel=4,
+        kernel=3,
         strides=2,
         padding=1,
+        output_padding=1,
         activation=True,
         batchnorm=True,
         dropout=False
@@ -18,7 +19,7 @@ class UpSampleConv(nn.Module):
         self.batchnorm = batchnorm
         self.dropout = dropout
 
-        self.deconv = nn.ConvTranspose2d(in_channels, out_channels, kernel, strides, padding)
+        self.deconv = nn.ConvTranspose2d(in_channels, out_channels, kernel, strides, padding,output_padding)
 
         if batchnorm:
             self.bn = nn.BatchNorm2d(out_channels)
