@@ -1,4 +1,4 @@
-from generator import Generator
+from generator import Pix2PixGenerator
 from patchgan import PatchGAN
 import torch.nn as nn
 import torch
@@ -23,7 +23,7 @@ class Pix2Pix:
 
         self.device = device
         self.display_step = display_step
-        self.gen = Generator(in_channels, out_channels)
+        self.gen = Pix2PixGenerator(in_channels, out_channels)
         self.patch_gan = PatchGAN(in_channels + out_channels)
 
         # Loss component weights

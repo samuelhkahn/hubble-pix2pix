@@ -26,6 +26,16 @@ class SquarePad:
     def __call__(self, image):
         return TF.pad(image, padding = self.padding,padding_mode = self.padding_mode)
 
+class Decimate:
+    def __init__(self,factor):
+        self.factor = factor
+        
+    def __call__(self, image):
+        print(image.shape)
+        image = image[...,::self.factor,::self.factor]
+        print(image.shape)
+
+        return image
 
 class SR_HST_HSC_Dataset(Dataset):
     '''
@@ -58,11 +68,11 @@ class SR_HST_HSC_Dataset(Dataset):
         self.to_pil = transforms.ToPILImage()
         self.to_tensor = transforms.ToTensor()
 
-
         self.lr_transforms = transforms.Compose([
-            transforms.ToPILImage(),
-            transforms.Resize(100, interpolation=IMode.BICUBIC)
+            Decimate(6),
+            transforms.ToPILImage()
         ])
+
         self.square_pad = SquarePad(14,"reflect")
         # now use it as the replacement of transforms.Pad class
         self.pad_array=transforms.Compose([

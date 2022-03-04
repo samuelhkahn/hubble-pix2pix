@@ -3,7 +3,7 @@ import torch.nn as nn
 from down_sample_conv import DownSampleConv
 from up_sample_conv import UpSampleConv
 import torch
-class Generator(nn.Module):
+class Pix2PixGenerator(nn.Module):
 
     def __init__(self, in_channels, out_channels):
         """
