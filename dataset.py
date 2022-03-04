@@ -31,10 +31,7 @@ class Decimate:
         self.factor = factor
         
     def __call__(self, image):
-        print(image.shape)
         image = image[...,::self.factor,::self.factor]
-        print(image.shape)
-
         return image
 
 class SR_HST_HSC_Dataset(Dataset):
