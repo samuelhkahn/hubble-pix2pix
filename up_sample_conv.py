@@ -6,10 +6,10 @@ class UpSampleConv(nn.Module):
         self,
         in_channels,
         out_channels,
-        kernel=3,
+        kernel=4,
         strides=2,
         padding=1,
-        output_padding=1,
+        output_padding=0,
         activation=True,
         batchnorm=True,
         dropout=False
