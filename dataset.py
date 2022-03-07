@@ -30,13 +30,13 @@ class SquarePad:
     def __call__(self, image):
         return TF.pad(image, padding = self.padding,padding_mode = self.padding_mode)
 
-# class Decimate:
-#     def __init__(self,factor):
-#         self.factor = factor
+class Decimate:
+    def __init__(self,factor):
+        self.factor = factor
         
-#     def __call__(self, image):
-#         image = image[...,::self.factor,::self.factor]
-#         return image
+    def __call__(self, image):
+        image = image[...,::self.factor,::self.factor]
+        return image
 class OpenCVResize:
     def __init__(self,dim,method):
         self.dim = dim

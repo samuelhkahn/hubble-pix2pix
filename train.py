@@ -127,7 +127,7 @@ def main():
 		for hr_real,hr_down,lr_condition, seg_map_real in tqdm(dataloader, position=0):
 			# Conv2d expects (n_samples, channels, height, width)
 			# So add the channel dimension
-			hr_real = hr_real.to(device)
+			hr_real = hr_real.unsqueeze(1).to(device)
 			hr_down = hr_down.unsqueeze(1).to(device) # real
 			lr_condition = lr_condition.unsqueeze(1).to(device) # condition
 			seg_map_real = seg_map_real.unsqueeze(1).to(device)
@@ -148,6 +148,7 @@ def main():
 				fake_images = pix2pix.generate_fake_images(lr_condition)
 
 				print('Step: {}, Generator loss: {:.5f}, Discriminator loss: {:.5f}'.format(cur_step,gen_loss, disc_loss))
+				hr = hr_real[0,:,:,:].squeeze(0).cpu()
 
 				real = hr_down[0,:,:,:].squeeze(0).cpu()
 				lr_condition = lr_condition[0,:,:,:].squeeze(0).cpu()
@@ -157,8 +158,8 @@ def main():
 				img_diff = CenterCrop(100)(fake - real).cpu().detach().numpy()
 				vmax = np.abs(img_diff).max()
 
-
-				log_figure(real.detach().numpy(),"Real Image",experiment)
+				log_figure(hr.detach().numpy(),"HST Full Image",experiment)
+				log_figure(real.detach().numpy(),"HST Downsampled Image",experiment)
 				log_figure(lr_condition.detach().numpy(),"Conditioned Image",experiment)
 				log_figure(fake.detach().numpy(),"Generated Image",experiment)
 				log_figure(CenterCrop(100)(lr_condition).detach().numpy(),"100x100 Conditioned Image",experiment)
