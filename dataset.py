@@ -7,6 +7,7 @@ from torch.utils.data import Dataset, DataLoader
 import os
 import torch
 import random
+import comet_ml
 import torchvision.transforms.functional as TF
 import sep
 from torchvision.transforms import CenterCrop
@@ -18,6 +19,9 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from skimage.filters import gaussian
 from sklearn.preprocessing import minmax_scale
 from torchvision.transforms.functional import InterpolationMode as IMode
+from log_figure import log_figure
+import cv2 as cv
+
 class SquarePad:
     def __init__(self,padding,padding_mode):
         self.padding = padding
@@ -26,12 +30,19 @@ class SquarePad:
     def __call__(self, image):
         return TF.pad(image, padding = self.padding,padding_mode = self.padding_mode)
 
-class Decimate:
-    def __init__(self,factor):
-        self.factor = factor
+# class Decimate:
+#     def __init__(self,factor):
+#         self.factor = factor
         
-    def __call__(self, image):
-        image = image[...,::self.factor,::self.factor]
+#     def __call__(self, image):
+#         image = image[...,::self.factor,::self.factor]
+#         return image
+class OpenCVResize:
+    def __init__(self,dim,method):
+        self.dim = dim
+        self.method = method
+    def __call__(self, image):        
+        image = cv.resize(image,(self.dim,self.dim),interpolation = self.method)
         return image
 
 class SR_HST_HSC_Dataset(Dataset):
@@ -43,7 +54,7 @@ class SR_HST_HSC_Dataset(Dataset):
         *args/**kwargs: all other arguments for subclassed torchvision dataset
     '''
 
-    def __init__(self, hst_path: str, hsc_path:str, hr_size: list, lr_size: list, transform_type: str, data_aug: bool ) -> None:
+    def __init__(self, hst_path: str, hsc_path:str, hr_size: list, lr_size: list, transform_type: str, data_aug: bool ,experiment:comet_ml.Experiment ) -> None:
         super().__init__()
 
         # sep.set_extract_pixstack(1000000)
@@ -60,13 +71,21 @@ class SR_HST_HSC_Dataset(Dataset):
         self.data_aug = data_aug
 
         self.filenames = os.listdir(hst_path)
-
+        self.experiment = experiment
 
         self.to_pil = transforms.ToPILImage()
         self.to_tensor = transforms.ToTensor()
 
+        # self.lr_transforms = transforms.Compose([
+        #     Decimate(6),
+        #     transforms.ToPILImage()
+        # ])
+        # self.lr_transforms = transforms.Compose([
+        #     transforms.ToPILImage(),
+        #     transforms.Resize(100, interpolation=IMode.BICUBIC)
+        # ])
         self.lr_transforms = transforms.Compose([
-            Decimate(6),
+            OpenCVResize(100,cv.INTER_NEAREST),
             transforms.ToPILImage()
         ])
 
@@ -75,11 +94,11 @@ class SR_HST_HSC_Dataset(Dataset):
         self.pad_array=transforms.Compose([
             transforms.ToPILImage(),
             self.square_pad,
-            transforms.Resize(128)
+            # transforms.Resize(128)
         ])
         self.pad_pil=transforms.Compose([
             self.square_pad,
-            transforms.Resize(128)
+            # transforms.Resize(128)
         ])
         
     def load_fits(self, file_path: str) -> np.ndarray:
@@ -209,10 +228,6 @@ class SR_HST_HSC_Dataset(Dataset):
                 hst_array = TF.rotate(hst_array,rotation,
                                     interpolation = TF.InterpolationMode.BILINEAR)
 
-            #Center Crop 
-            hsc_array = TF.center_crop(hsc_array,[100,100])
-            hst_array = TF.center_crop(hst_array,[600,600])
-
         ## Flip Augmentations
             if random.random() > 0.5:
                 hsc_array  = TF.vflip(hsc_array)
@@ -221,10 +236,9 @@ class SR_HST_HSC_Dataset(Dataset):
             if random.random() >0.5:
                 hsc_array  = TF.hflip(hsc_array)
                 hst_array  = TF.hflip(hst_array)
-        else:
-             #Center Crop 
-            hsc_array = TF.center_crop(hsc_array,[100,100])
-            hst_array = TF.center_crop(hst_array,[600,600])
+         #Center Crop 
+        hsc_array = TF.center_crop(hsc_array,[100,100])
+        hst_array = TF.center_crop(hst_array,[600,600])
 
         hsc_array = np.array(hsc_array)
         hst_array = np.array(hst_array)
@@ -270,6 +284,7 @@ class SR_HST_HSC_Dataset(Dataset):
         elif self.transform_type == "paired_image_translation":
             hst_clipped = self.clip(hst_array,use_data=False)[0]
             hst_transformation = self.ds9_scaling(hst_clipped,offset = 1)
+
             hst_lr_transformation =self.lr_transforms(hst_transformation)
             hst_down_seg_map = self.lr_transforms(hst_seg_map)
             
