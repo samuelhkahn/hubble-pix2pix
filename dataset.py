@@ -21,6 +21,7 @@ from sklearn.preprocessing import minmax_scale
 from torchvision.transforms.functional import InterpolationMode as IMode
 from log_figure import log_figure
 import cv2 as cv
+from scipy.ndimage import gaussian_filter 
 
 class SquarePad:
     def __init__(self,padding,padding_mode):
@@ -31,12 +32,18 @@ class SquarePad:
         return TF.pad(image, padding = self.padding,padding_mode = self.padding_mode)
 
 class Decimate:
-    def __init__(self,factor):
+    def __init__(self,factor:int=6,blur:bool=True,sigma:int=1):
         self.factor = factor
-        
+        self.blur = blur
+        self.sigma = sigma
     def __call__(self, image):
-        image = image[...,::self.factor,::self.factor]
+        if self.blur == True:
+            image = gaussian_filter(image[...,:,:],sigma=self.sigma) 
+            image = image[...,::self.factor,::self.factor]
+        else:
+            image = image[...,::self.factor,::self.factor]
         return image
+
 class OpenCVResize:
     def __init__(self,dim,method):
         self.dim = dim
@@ -76,18 +83,18 @@ class SR_HST_HSC_Dataset(Dataset):
         self.to_pil = transforms.ToPILImage()
         self.to_tensor = transforms.ToTensor()
 
-        # self.lr_transforms = transforms.Compose([
-        #     Decimate(6),
-        #     transforms.ToPILImage()
-        # ])
+        self.lr_transforms = transforms.Compose([
+            Decimate(6,True,1),
+            transforms.ToPILImage()
+        ])
         # self.lr_transforms = transforms.Compose([
         #     transforms.ToPILImage(),
         #     transforms.Resize(100, interpolation=IMode.BICUBIC)
         # ])
-        self.lr_transforms = transforms.Compose([
-            OpenCVResize(100,cv.INTER_NEAREST),
-            transforms.ToPILImage()
-        ])
+        # self.lr_transforms = transforms.Compose([
+        #     OpenCVResize(100,cv.INTER_NEAREST),
+        #     transforms.ToPILImage()
+        # ])
 
         self.square_pad = SquarePad(14,"reflect")
         # now use it as the replacement of transforms.Pad class
