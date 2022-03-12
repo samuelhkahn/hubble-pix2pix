@@ -83,10 +83,10 @@ class SR_HST_HSC_Dataset(Dataset):
         self.to_pil = transforms.ToPILImage()
         self.to_tensor = transforms.ToTensor()
 
-        self.lr_transforms = transforms.Compose([
-            Decimate(6,True,1),
-            transforms.ToPILImage()
-        ])
+        # self.lr_transforms = transforms.Compose([
+        #     Decimate(6,True,1),
+        #     transforms.ToPILImage()
+        # ])
         # self.lr_transforms = transforms.Compose([
         #     transforms.ToPILImage(),
         #     transforms.Resize(100, interpolation=IMode.BICUBIC)
@@ -95,8 +95,11 @@ class SR_HST_HSC_Dataset(Dataset):
         #     OpenCVResize(100,cv.INTER_NEAREST),
         #     transforms.ToPILImage()
         # ])
-
-        self.square_pad = SquarePad(14,"reflect")
+        self.hr_transforms = transforms.Compose([
+            transforms.ToPILImage(),
+            transforms.Resize(600, interpolation=IMode.BICUBIC)
+        ])
+        self.square_pad = SquarePad(84,"reflect")
         # now use it as the replacement of transforms.Pad class
         self.pad_array=transforms.Compose([
             transforms.ToPILImage(),
@@ -221,8 +224,6 @@ class SR_HST_HSC_Dataset(Dataset):
         hst_array = self.to_pil(hst_array)
         hsc_array = self.to_pil(hsc_array)
 
-        # hsc_array = self.to_tensor(hst_array)
-        # hst_array = self.to_tensor(hsc_array)
 
         if self.data_aug == True:
             if random.random() > 0.5:
@@ -292,24 +293,17 @@ class SR_HST_HSC_Dataset(Dataset):
             hst_clipped = self.clip(hst_array,use_data=False)[0]
             hst_transformation = self.ds9_scaling(hst_clipped,offset = 1)
 
-            hst_lr_transformation =self.lr_transforms(hst_transformation)
-            hst_down_seg_map = self.lr_transforms(hst_seg_map)
-            
             hsc_clipped = self.clip(hsc_array,use_data=False)[0]
             hsc_transformation = self.ds9_scaling(hsc_clipped,offset = 1)
+            hsc_hr = self.hr_transforms(hsc_clipped)
 
 
 
-        # Add Segmap to second channel to ensure proper augmentations
-        # hst_seg_stack = np.dstack((hst_transformation,hst_seg_map))
-        # hst_seg_stack = self.to_tensor(hst_seg_stack)        
-
-
-        # Collapse First Dimension and extract hst/seg_map
+        # Add Segmap to second channel to ensure proper augmentation  
         
-        hst_down_seg_map = self.to_tensor(self.pad_pil(hst_down_seg_map)).squeeze(0)
-        hsc_tensor = self.to_tensor(self.pad_array(hsc_transformation)).squeeze(0)
-        hst_tensor = self.to_tensor(hst_transformation).squeeze(0)
-        hst_lr_tensor = self.to_tensor(self.pad_pil(hst_lr_transformation)).squeeze(0)
+        hst_seg_map = self.to_tensor(self.pad_array(hst_seg_map)).squeeze(0)
+        hsc = self.to_tensor(hsc_transformation).squeeze(0)
+        hst = self.to_tensor(self.pad_array(hst_transformation)).squeeze(0)
+        hsc_hr = self.to_tensor(self.pad_pil(hsc_hr)).squeeze(0)
 
-        return  hst_tensor,hst_lr_tensor,hsc_tensor,hst_down_seg_map
+        return  hst,hsc_hr,hsc,hst_seg_map

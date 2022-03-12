@@ -14,7 +14,7 @@ class Pix2PixGenerator(nn.Module):
         - Decoder: CD512-CD1024-CD1024-C1024-C1024-C512 -C256-C128
         """
         super().__init__()
-
+        # self.upsample = nn.Upsample(scale_factor=6, mode='bicubic',align_corners = True)
         # encoder/donwsample convs
         self.encoders = [
             DownSampleConv(in_channels, 64, batchnorm=False),  # bs x 64 x 128 x 128
@@ -23,7 +23,7 @@ class Pix2PixGenerator(nn.Module):
             DownSampleConv(256, 512),  # bs x 512 x 16 x 16
             DownSampleConv(512, 512),  # bs x 512 x 8 x 8
             DownSampleConv(512, 512),  # bs x 512 x 4 x 4
-            # DownSampleConv(512, 512),  # bs x 512 x 2 x 2
+            DownSampleConv(512, 512),  # bs x 512 x 2 x 2
             DownSampleConv(512, 512, batchnorm=False),  # bs x 512 x 1 x 1
         ]
 
@@ -31,7 +31,7 @@ class Pix2PixGenerator(nn.Module):
         self.decoders = [
             UpSampleConv(512, 512,  dropout=True),  # bs x 512 x 2 x 2
             UpSampleConv(1024, 512, dropout=True),  # bs x 512 x 4 x 4
-            # UpSampleConv(1024, 512, dropout=True),  # bs x 512 x 8 x 8
+            UpSampleConv(1024, 512, dropout=True),  # bs x 512 x 8 x 8
             UpSampleConv(1024, 512),  # bs x 512 x 16 x 16
             UpSampleConv(1024, 256),  # bs x 256 x 32 x 32
             UpSampleConv(512, 128),  # bs x 128 x 64 x 64
@@ -48,8 +48,7 @@ class Pix2PixGenerator(nn.Module):
 
     def forward(self, x):
         # Original Image
-        x_in = x 
-
+        # x = self.upsample(x)
         # Encode & Skip Connections
         skips_cons = []
         for encoder in self.encoders:

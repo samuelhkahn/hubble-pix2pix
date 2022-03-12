@@ -74,9 +74,9 @@ class Pix2Pix:
         fake_images = self.gen(conditioned_images)
 
         #Crop off sides so not computed in loss 
-        fake_images = CenterCrop(100)(fake_images)
-        conditioned_images = CenterCrop(100)(conditioned_images)
-        real_images = CenterCrop(100)(real_images)
+        fake_images = CenterCrop(600)(fake_images)
+        conditioned_images = CenterCrop(600)(conditioned_images)
+        real_images = CenterCrop(600)(real_images)
 
         disc_logits = self.patch_gan(fake_images, conditioned_images)
 
@@ -94,11 +94,10 @@ class Pix2Pix:
 
         scattering_loss = (scat_real - scat_fake).abs().sum(axis=(1, 2, 3)).mean()
 
-        total_loss = self.lr*(self.lambda_adv*adversarial_loss\
-                     + self.lambda_recon*recon_loss\
+        total_loss = self.lr*(self.lambda_adv*adversarial_loss+ self.lambda_recon*recon_loss\
                      + self.lambda_vgg*vgg_loss\
                      + self.lambda_scattering*scattering_loss)
-
+        # scattering_loss = 0
         
         return total_loss,adversarial_loss,recon_loss,vgg_loss,scattering_loss
 
@@ -111,9 +110,9 @@ class Pix2Pix:
         fake_images = self.gen(conditioned_images).detach()
 
         #Crop off sides so not computed in loss 
-        fake_images = CenterCrop(100)(fake_images)
-        conditioned_images = CenterCrop(100)(conditioned_images)
-        real_images = CenterCrop(100)(real_images)
+        fake_images = CenterCrop(600)(fake_images)
+        conditioned_images = CenterCrop(600)(conditioned_images)
+        real_images = CenterCrop(600)(real_images)
 
         fake_logits = self.patch_gan(fake_images, conditioned_images)
 
