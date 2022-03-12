@@ -293,17 +293,18 @@ class SR_HST_HSC_Dataset(Dataset):
             hst_clipped = self.clip(hst_array,use_data=False)[0]
             hst_transformation = self.ds9_scaling(hst_clipped,offset = 1)
 
-            hsc_clipped = self.clip(hsc_array,use_data=False)[0]
-            hsc_transformation = self.ds9_scaling(hsc_clipped,offset = 1)
-            hsc_hr = self.hr_transforms(hsc_clipped)
+            hsc_hr = self.hr_transforms(hsc_array)
+            hsc_hr_clipped = self.clip(np.array(hsc_hr),use_data=False)[0]
+            hsc_transformation = self.ds9_scaling(hsc_hr_clipped,offset = 1)
+            
 
 
 
         # Add Segmap to second channel to ensure proper augmentation  
         
         hst_seg_map = self.to_tensor(self.pad_array(hst_seg_map)).squeeze(0)
-        hsc = self.to_tensor(hsc_transformation).squeeze(0)
+        hsc = self.to_tensor(hsc_array).squeeze(0)
         hst = self.to_tensor(self.pad_array(hst_transformation)).squeeze(0)
-        hsc_hr = self.to_tensor(self.pad_pil(hsc_hr)).squeeze(0)
+        hsc_hr = self.to_tensor(self.pad_array(hsc_transformation)).squeeze(0)
 
         return  hst,hsc_hr,hsc,hst_seg_map
