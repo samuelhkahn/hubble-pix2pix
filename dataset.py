@@ -97,7 +97,7 @@ class SR_HST_HSC_Dataset(Dataset):
         # ])
         self.hr_transforms = transforms.Compose([
             transforms.ToPILImage(),
-            transforms.Resize(600, interpolation=IMode.BICUBIC)
+            transforms.Resize(600, interpolation=IMode.NEAREST)
         ])
         self.square_pad = SquarePad(84,"reflect")
         # now use it as the replacement of transforms.Pad class

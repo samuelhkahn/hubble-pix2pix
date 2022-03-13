@@ -12,14 +12,23 @@ class UpSampleConv(nn.Module):
         output_padding=0,
         activation=True,
         batchnorm=True,
-        dropout=False
+        dropout=False,
+        resize_convolution=True
     ):
         super().__init__()
         self.activation = activation
         self.batchnorm = batchnorm
         self.dropout = dropout
+        if resize_convolution:
 
-        self.deconv = nn.ConvTranspose2d(in_channels, out_channels, kernel, strides, padding,output_padding)
+            self.deconv =  nn.Sequential(
+                                            nn.Upsample(scale_factor = 2, mode='nearest'),
+                                            nn.ReflectionPad2d(1),
+                                            nn.Conv2d(in_channels, out_channels,kernel_size=3, stride=1, padding=0)
+                                        )
+            # self.deconv = nn.ModuleList(self.deconv)
+        else:
+            self.deconv = nn.ConvTranspose2d(in_channels, out_channels, kernel, strides, padding,output_padding)
 
         if batchnorm:
             self.bn = nn.BatchNorm2d(out_channels)
