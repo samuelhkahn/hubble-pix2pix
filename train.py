@@ -137,10 +137,10 @@ def main():
 			lr_up = lr_up.unsqueeze(1).to(device) # real
 			lr = lr.unsqueeze(1).to(device) # condition
 			seg_map_real = seg_map_real.unsqueeze(1).to(device)
-			print(f"HR Shape: {hr_real.shape}")
-			print(f"LR Up Shape: {lr_up.shape}")
-			print(f"LR  Shape: {lr.shape}")
-			print(f"HR Seg Realy Shape: {seg_map_real.shape}")
+			# print(f"HR Shape: {hr_real.shape}")
+			# print(f"LR Up Shape: {lr_up.shape}")
+			# print(f"LR  Shape: {lr.shape}")
+			# print(f"HR Seg Realy Shape: {seg_map_real.shape}")
 			if cur_step%disc_update_freq==0:
 				disc_loss = pix2pix.training_step(hr_real,lr_up,seg_map_real,"discriminator").item()
 
