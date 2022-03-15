@@ -99,16 +99,16 @@ class SR_HST_HSC_Dataset(Dataset):
             transforms.ToPILImage(),
             transforms.Resize(600, interpolation=IMode.NEAREST)
         ])
-        self.square_pad = SquarePad(84,"reflect")
+
         # now use it as the replacement of transforms.Pad class
-        self.pad_array=transforms.Compose([
+        self.pad_array_hr=transforms.Compose([
             transforms.ToPILImage(),
-            self.square_pad,
-            # transforms.Resize(128)
+             SquarePad(84,"reflect")
         ])
-        self.pad_pil=transforms.Compose([
-            self.square_pad,
-            # transforms.Resize(128)
+
+        self.pad_array_lr=transforms.Compose([
+            transforms.ToPILImage(),
+            SquarePad(14,"reflect")
         ])
         
     def load_fits(self, file_path: str) -> np.ndarray:
@@ -293,8 +293,7 @@ class SR_HST_HSC_Dataset(Dataset):
             hst_clipped = self.clip(hst_array,use_data=False)[0]
             hst_transformation = self.ds9_scaling(hst_clipped,offset = 1)
 
-            hsc_hr = self.hr_transforms(hsc_array)
-            hsc_hr_clipped = self.clip(np.array(hsc_hr),use_data=False)[0]
+            hsc_hr_clipped = self.clip(hsc_array,use_data=False)[0]
             hsc_transformation = self.ds9_scaling(hsc_hr_clipped,offset = 1)
             
 
@@ -302,9 +301,8 @@ class SR_HST_HSC_Dataset(Dataset):
 
         # Add Segmap to second channel to ensure proper augmentation  
         
-        hst_seg_map = self.to_tensor(self.pad_array(hst_seg_map)).squeeze(0)
-        hsc = self.to_tensor(hsc_array).squeeze(0)
-        hst = self.to_tensor(self.pad_array(hst_transformation)).squeeze(0)
-        hsc_hr = self.to_tensor(self.pad_array(hsc_transformation)).squeeze(0)
+        hst_seg_map = self.to_tensor(self.pad_array_hr(hst_seg_map)).squeeze(0)
+        hsc = self.to_tensor(self.pad_array_lr(hsc_transformation)).squeeze(0)
+        hst = self.to_tensor(self.pad_array_hr(hst_transformation)).squeeze(0)
 
-        return  hst,hsc_hr,hsc,hst_seg_map
+        return  hst,hsc,hst_seg_map

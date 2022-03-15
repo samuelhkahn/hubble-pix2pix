@@ -11,8 +11,8 @@ class PatchGAN(nn.Module):
         self.d4 = DownSampleConv(256, 512)
         self.final = nn.Conv2d(512, 1, kernel_size=1)
 
-    def forward(self, x, y):
-        x = torch.cat([x, y], axis=1)
+    def forward(self, x):
+        # x = torch.cat([x, y], axis=1)
         x0 = self.d1(x)
         x1 = self.d2(x0)
         x2 = self.d3(x1)

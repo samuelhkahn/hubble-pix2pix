@@ -24,7 +24,7 @@ class Pix2Pix:
         self.device = device
         self.display_step = display_step
         self.gen = Pix2PixGenerator(in_channels, out_channels)
-        self.patch_gan = PatchGAN(in_channels + out_channels)
+        self.patch_gan = PatchGAN(1)
 
         # Loss component weights
         self.lr = learning_rate
@@ -75,10 +75,10 @@ class Pix2Pix:
 
         #Crop off sides so not computed in loss 
         fake_images = CenterCrop(600)(fake_images)
-        conditioned_images = CenterCrop(600)(conditioned_images)
+        conditioned_images = CenterCrop(100)(conditioned_images)
         real_images = CenterCrop(600)(real_images)
 
-        disc_logits = self.patch_gan(fake_images, conditioned_images)
+        disc_logits = self.patch_gan(fake_images)
 
         adversarial_loss = self.adversarial_criterion(disc_logits, torch.ones_like(disc_logits))
 
@@ -111,12 +111,15 @@ class Pix2Pix:
 
         #Crop off sides so not computed in loss 
         fake_images = CenterCrop(600)(fake_images)
-        conditioned_images = CenterCrop(600)(conditioned_images)
+        # conditioned_images = CenterCrop(100)(conditioned_images)
         real_images = CenterCrop(600)(real_images)
-
-        fake_logits = self.patch_gan(fake_images, conditioned_images)
-
-        real_logits = self.patch_gan(real_images, conditioned_images)
+    ### NOTE TO SELF; I removed the second channel of PATCHGAN, which
+    ### is the conditioned image. In the context of SuperResolution
+    ### It doesn't make too mch sense since we don't have a HR input image. 
+    ### We'd need to upsample the input and that would likely cause shifting
+    ### It will be worth trying it though as an expereiment!
+        fake_logits = self.patch_gan(fake_images)
+        real_logits = self.patch_gan(real_images)
 
         fake_loss = self.adversarial_criterion(fake_logits, torch.zeros_like(fake_logits))
         real_loss = self.adversarial_criterion(real_logits, torch.ones_like(real_logits))

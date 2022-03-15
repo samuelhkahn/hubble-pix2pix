@@ -19,34 +19,29 @@ hsc_dim = int(config["HSC_DIM"]["hsc_dim"])
 
 def collate_fn(batch):
 
-	hrs, lr_ups, lrs, hr_segs = [], [], [], []
-	for hr,lr_up, lr,hr_seg in batch:
+	hrs, lrs, hr_segs = [], [], []
+	for hr,lr,hr_seg in batch:
 		hr_nan = torch.isnan(hr).any()
-		hr_down_nan = torch.isnan(lr_up).any()
 		lr_nan = torch.isnan(lr).any()
 
 		hr_inf = torch.isinf(hr).any()
-		hr_down_inf = torch.isnan(lr_up).any()
 		lr_inf = torch.isinf(lr).any()
 
-		good_vals = [hr_nan,hr_down_nan,lr_nan,hr_inf,hr_down_inf,lr_inf]
+		good_vals = [hr_nan,lr_nan,hr_inf,lr_inf]
 
 		# print(f"HR Shape: {hr.shape}")
 		# print(f"LR Up Shape: {lr_up.shape}")
 		# print(f"LR Shape: {lr.shape}")
 		# print(f"HR Seg Shape: {hr_seg.shape}")
-
-		if hr.shape == (768,768) and lr_up.shape == (768,768) and lr.shape == (100,100) and True not in good_vals:
+		if hr.shape == (768,768) and lr.shape == (128,128) and True not in good_vals:
 			hrs.append(hr)
-			lr_ups.append(lr_up)
 			lrs.append(lr)
 			hr_segs.append(hr_seg)
 
 	hrs = torch.stack(hrs, dim=0)
-	lr_ups = torch.stack(lr_ups, dim=0)
 	lrs = torch.stack(lrs, dim=0)
 	hr_segs = torch.stack(hr_segs, dim=0)
-	return hrs, lr_ups, lrs, hr_segs
+	return hrs,  lrs, hr_segs
 
 
 def main():
@@ -130,11 +125,10 @@ def main():
 	cur_step = 0
 
 	while cur_step < total_steps:
-		for hr_real,lr_up,lr, seg_map_real in tqdm(dataloader, position=0):
+		for hr_real,lr, seg_map_real in tqdm(dataloader, position=0):
 			# Conv2d expects (n_samples, channels, height, width)
 			# So add the channel dimension
 			hr_real = hr_real.unsqueeze(1).to(device)
-			lr_up = lr_up.unsqueeze(1).to(device) # real
 			lr = lr.unsqueeze(1).to(device) # condition
 			seg_map_real = seg_map_real.unsqueeze(1).to(device)
 			# print(f"HR Shape: {hr_real.shape}")
@@ -142,9 +136,9 @@ def main():
 			# print(f"LR  Shape: {lr.shape}")
 			# print(f"HR Seg Realy Shape: {seg_map_real.shape}")
 			if cur_step%disc_update_freq==0:
-				disc_loss = pix2pix.training_step(hr_real,lr_up,seg_map_real,"discriminator").item()
+				disc_loss = pix2pix.training_step(hr_real,lr,seg_map_real,"discriminator").item()
 
-			losses = pix2pix.training_step(hr_real,lr_up,seg_map_real,"generator")
+			losses = pix2pix.training_step(hr_real,lr,seg_map_real,"generator")
 
 
 			gen_loss,adv_loss,recon_loss,vgg_loss,scattering_loss = losses[0].item(),\
@@ -155,12 +149,10 @@ def main():
 
 
 			if cur_step % display_step == 0 and cur_step > 0:
-				fake_images = pix2pix.generate_fake_images(lr_up)
+				fake_images = pix2pix.generate_fake_images(lr)
 
 				print('Step: {}, Generator loss: {:.5f}, Discriminator loss: {:.5f}'.format(cur_step,gen_loss, disc_loss))
 				hr = hr_real[0,:,:,:].squeeze(0).cpu()
-
-				lr_up = lr_up[0,:,:,:].squeeze(0).cpu()
 				lr = lr[0,:,:,:].squeeze(0).cpu()
 				fake = fake_images[0,0,:,:].double().cpu()
 
@@ -169,12 +161,11 @@ def main():
 				vmax = np.abs(img_diff).max()
 
 				log_figure(hr.detach().numpy(),"HST Full Image",experiment)
-				log_figure(lr_up.detach().numpy(),"HSC Upsampled (conditioned) Image",experiment)
 				log_figure(lr.detach().numpy(),"LR Image",experiment)
 				log_figure(fake.detach().numpy(),"Generated Image",experiment)
-				log_figure(CenterCrop(600)(lr_up).detach().numpy(),"600x600 Conditioned Image",experiment)
-				log_figure(CenterCrop(600)(fake).detach().numpy(),"600x600 Generated Image",experiment)
-				log_figure(CenterCrop(600)(hr).detach().numpy(),"600x600 Real Image",experiment)
+				log_figure(CenterCrop(100)(lr).detach().numpy(),"100x100 Conditioned Image (HSC)",experiment)
+				log_figure(CenterCrop(600)(fake).detach().numpy(),"600x600 Generated Image (SR)",experiment)
+				log_figure(CenterCrop(600)(hr).detach().numpy(),"600x600 Real Image (HST)",experiment)
 
 				log_figure(img_diff,"Paired Image Difference",experiment,cmap="bwr_r",set_lims=True,lims=[-vmax,vmax])
 
