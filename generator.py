@@ -103,7 +103,7 @@ class Pix2PixGenerator(nn.Module):
         x = torch.cat((x, x_in), axis=1)
         print(x.shape)
 
-        x = self.ps_blocks(x)
+
         # final conv to go from 2->1 channels
         x = self.final_conv(x)
 
