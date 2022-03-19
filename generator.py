@@ -15,13 +15,14 @@ class Pix2PixGenerator(nn.Module):
         """
         super().__init__()
         # self.upsample = nn.Upsample(scale_factor=6, mode='bicubic',align_corners = True)
+
         # encoder/donwsample convs
         self.encoders = [
             DownSampleConv(in_channels, 64, batchnorm=False),  # bs x 64 x 128 x 128
             DownSampleConv(64, 128),  # bs x 128 x 64 x 64
             DownSampleConv(128, 256),  # bs x 256 x 32 x 32
             DownSampleConv(256, 512),  # bs x 512 x 16 x 16
-            # DownSampleConv(512, 512),  # bs x 512 x 8 x 8
+            DownSampleConv(512, 512),  # bs x 512 x 8 x 8
             DownSampleConv(512, 512),  # bs x 512 x 4 x 4
             DownSampleConv(512, 512),  # bs x 512 x 2 x 2
             DownSampleConv(512, 512, batchnorm=False),  # bs x 512 x 1 x 1
@@ -32,7 +33,7 @@ class Pix2PixGenerator(nn.Module):
             UpSampleConv(512, 512,  dropout=True),  # bs x 512 x 2 x 2
             UpSampleConv(1024, 512, dropout=True),  # bs x 512 x 4 x 4
             UpSampleConv(1024, 512, dropout=True),  # bs x 512 x 8 x 8
-            # UpSampleConv(1024, 512),  # bs x 512 x 16 x 16
+            UpSampleConv(1024, 512),  # bs x 512 x 16 x 16
             UpSampleConv(1024, 256),  # bs x 256 x 32 x 32
             UpSampleConv(512, 128),  # bs x 128 x 64 x 64
             UpSampleConv(256, 64),  # bs x 64 x 128 x 128
@@ -43,19 +44,19 @@ class Pix2PixGenerator(nn.Module):
         #                         nn.Upsample(scale_factor = 2, mode='nearest'),
         #                         nn.ReflectionPad2d(1),
         #                         nn.Conv2d(64, 16,kernel_size=3, stride=1, padding=0))
-        self.final_conv = nn.Conv2d(2, 1, kernel_size=1, stride=1, padding=0)
+        self.final_conv = nn.Conv2d(1, 1, kernel_size=1, stride=1, padding=0)
             # Sub-Pixel Convolutions (PixelShuffle) 
         ps_blocks = []
         for i in range(n_ps_blocks):
 
             if i == 0:
                 ps_blocks += [
-                nn.Conv2d(2, 9 * 2, kernel_size=3, padding=1),
+                nn.Conv2d(1, 9*1, kernel_size=3, padding=1),
                 nn.PixelShuffle(3),
                 nn.PReLU(),]
             else:
                 ps_blocks += [
-                nn.Conv2d(2, 4 * 2, kernel_size=3, padding=1),
+                nn.Conv2d(1, 4*1, kernel_size=3, padding=1),
                 nn.PixelShuffle(2),
                 nn.PReLU(),
             ]
@@ -70,8 +71,10 @@ class Pix2PixGenerator(nn.Module):
     def forward(self, x):
         # Original Image
         # x = self.upsample(x)
-        x_in = x
+        # x_in = x
         # Encode & Skip Connections
+        print(x.shape)
+        x = self.ps_blocks(x)
         skips_cons = []
         for encoder in self.encoders:
             # print("Before Encoder:",x.shape)
@@ -96,12 +99,10 @@ class Pix2PixGenerator(nn.Module):
 
         #Up sample
         x = self.up_conv(x)
-        print(x.shape)
 
 
         # Add input image (HSC) as "skip connection"
-        x = torch.cat((x, x_in), axis=1)
-        print(x.shape)
+        # x = torch.cat((x, x_in), axis=1)
 
 
         # final conv to go from 2->1 channels
