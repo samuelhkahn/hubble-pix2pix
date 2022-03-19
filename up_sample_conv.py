@@ -13,7 +13,7 @@ class UpSampleConv(nn.Module):
         activation=True,
         batchnorm=True,
         dropout=False,
-        resize_convolution=True
+        resize_convolution=False
     ):
         super().__init__()
         self.activation = activation
