@@ -13,7 +13,8 @@ class Pix2Pix:
                       input_size,
                       device,
                       learning_rate=0.0002, 
-                      lambda_recon=200, 
+                      lambda_recon=200,
+                      lambda_segmap=200,
                       lambda_vgg = 200,
                       lambda_scattering = 1,
                       lambda_adv = 5,
@@ -32,6 +33,7 @@ class Pix2Pix:
         self.lambda_vgg = lambda_vgg
         self.lambda_scattering = lambda_scattering
         self.lambda_adv = lambda_adv
+        self.lambda_segmap = lambda_segmap
 
 
         # intializing weights
@@ -77,6 +79,7 @@ class Pix2Pix:
         fake_images = CenterCrop(600)(fake_images)
         conditioned_images = CenterCrop(100)(conditioned_images)
         real_images = CenterCrop(600)(real_images)
+        seg_map_real =  CenterCrop(600)(seg_map_real)
 
         disc_logits = self.patch_gan(fake_images)
 
@@ -87,6 +90,8 @@ class Pix2Pix:
         recon_loss = self.recon_criterion_l1(fake_images, real_images)
         vgg_loss = self.vgg_criterion(fake_images, real_images)
 
+        #segmap loss
+        segmap_loss = self.l1_loss_with_mask(fake_images, real_images,seg_map_real)
         #wavlet scattering loss
         scat_real = self.scattering_f(real_images.contiguous()).squeeze(1)[:,1:,:,:]
         scat_fake = self.scattering_f(fake_images.contiguous()).squeeze(1)[:,1:,:,:]
@@ -96,10 +101,11 @@ class Pix2Pix:
 
         total_loss = self.lr*(self.lambda_adv*adversarial_loss+ self.lambda_recon*recon_loss\
                      + self.lambda_vgg*vgg_loss\
-                     + self.lambda_scattering*scattering_loss)
+                     + self.lambda_scattering*scattering_loss\
+                     + self.lambda_segmap*segmap_loss)
         # scattering_loss = 0
         
-        return total_loss,adversarial_loss,recon_loss,vgg_loss,scattering_loss
+        return total_loss,adversarial_loss,recon_loss,vgg_loss,scattering_loss,segmap_loss
 
     def generate_fake_images(self, conditioned_images):
         # Generate image for plotting
@@ -136,8 +142,8 @@ class Pix2Pix:
             self.disc_opt.step()
             return loss
         elif optimizer == "generator":
-            total_loss,adversarial_loss,recon_loss,vgg_loss,scattering_loss = self._gen_step(real, condition, seg_map_real)
+            total_loss,adversarial_loss,recon_loss,vgg_loss,scattering_loss,segmap_loss = self._gen_step(real, condition, seg_map_real)
             self.gen_opt.zero_grad()
             total_loss.backward()
             self.gen_opt.step()
-            return total_loss,adversarial_loss,recon_loss,vgg_loss,scattering_loss
+            return total_loss,adversarial_loss,recon_loss,vgg_loss,scattering_loss,segmap_loss

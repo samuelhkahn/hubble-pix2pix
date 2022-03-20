@@ -70,6 +70,7 @@ def main():
 
 	lr = eval(config["LR"]["lr"])
 	lambda_recon = eval(config["LAMBDA_RECON"]["lambda_recon"])
+	lambda_segmap = eval(config["LAMBDA_RECON"]["lambda_recon"])
 	lambda_vgg = eval(config["LAMBDA_VGG"]["lambda_vgg"])
 	lambda_scattering = eval(config["LAMBDA_SCATTERING"]["lambda_scattering"])
 	lambda_adv = eval(config["LAMBDA_ADV"]["lambda_adv"])
@@ -117,6 +118,7 @@ def main():
 					 device = device,
 					 learning_rate=lr, 
 					 lambda_recon=lambda_recon, 
+					 lambda_segmap=lambda_segmap,
 					 lambda_vgg=lambda_vgg, 
 					 lambda_scattering=lambda_scattering,
 					 lambda_adv=lambda_adv, 
@@ -141,11 +143,12 @@ def main():
 			losses = pix2pix.training_step(hr_real,lr,seg_map_real,"generator")
 
 
-			gen_loss,adv_loss,recon_loss,vgg_loss,scattering_loss = losses[0].item(),\
-																	losses[1].item(),\
-																	losses[2].item(),\
-																	losses[3].item(),\
-																	losses[4].item()
+			gen_loss,adv_loss,recon_loss,vgg_loss,scattering_loss,segmap_loss = losses[0].item(),\
+																				losses[1].item(),\
+																				losses[2].item(),\
+																				losses[3].item(),\
+																				losses[4].item(),\
+																				losses[5].item()
 
 
 			if cur_step % display_step == 0 and cur_step > 0:
@@ -175,6 +178,10 @@ def main():
 				experiment.log_metric("VGG Loss",vgg_loss)
 				experiment.log_metric("L1 Reconstriction Loss",recon_loss)
 				experiment.log_metric("L1 Scattereing Loss",scattering_loss)
+				experiment.log_metric("L1 Reconstriction Segmap Loss",segmap_loss)
+				experiment.log_metric("L1 Segmap/L1 Recon Loss",segmap_loss/recon_loss)
+
+
 				experiment.log_metric("Adversarial Loss",adv_loss)
 
 
