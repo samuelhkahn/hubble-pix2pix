@@ -8,13 +8,7 @@ import numpy as np
 import configparser
 from log_figure import log_figure
 from torchvision.transforms import CenterCrop
-
-
-# Load file paths from config
-config = configparser.ConfigParser()
-config.read('paths.config')
-hst_dim = int(config["HST_DIM"]["hst_dim"])
-hsc_dim = int(config["HSC_DIM"]["hsc_dim"])
+import sys
 
 
 def collate_fn(batch):
@@ -48,12 +42,16 @@ def main():
 	device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 	# Load file paths from config
+	config_file = sys.argv[1]
 	config = configparser.ConfigParser()
-	config.read('paths.config')
+	config.read(config_file)
 
 	# Configuration Information
 	hst_path = config["DEFAULT"]["hst_path"]
 	hsc_path = config["DEFAULT"]["hsc_path"]
+
+	hst_dim = int(config["HST_DIM"]["hst_dim"])
+	hsc_dim = int(config["HSC_DIM"]["hsc_dim"])
 
 	comet_tag = config["COMET_TAG"]["comet_tag"]
 
