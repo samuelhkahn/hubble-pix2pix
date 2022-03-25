@@ -104,7 +104,7 @@ class Pix2Pix:
                      + self.lambda_scattering*scattering_loss\
                      + self.lambda_segmap*segmap_loss)
         # scattering_loss = 0
-        
+        print(self.lambda_segmap,segmap_loss)
         return total_loss,adversarial_loss,recon_loss,vgg_loss,scattering_loss,segmap_loss
 
     def generate_fake_images(self, conditioned_images):

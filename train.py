@@ -68,7 +68,7 @@ def main():
 
 	lr = eval(config["LR"]["lr"])
 	lambda_recon = eval(config["LAMBDA_RECON"]["lambda_recon"])
-	lambda_segmap = eval(config["LAMBDA_RECON"]["lambda_recon"])
+	lambda_segmap = eval(config["LAMBDA_SEGMAP"]["lambda_segmap"])
 	lambda_vgg = eval(config["LAMBDA_VGG"]["lambda_vgg"])
 	lambda_scattering = eval(config["LAMBDA_SCATTERING"]["lambda_scattering"])
 	lambda_adv = eval(config["LAMBDA_ADV"]["lambda_adv"])
