@@ -5,7 +5,7 @@ import torch
 from torchvision.transforms import CenterCrop
 from vgg19_loss import VGGLoss
 from kymatio.torch import Scattering2D
-
+import os
 class Pix2Pix:
 
     def __init__(self,in_channels, 
@@ -18,14 +18,30 @@ class Pix2Pix:
                       lambda_vgg = 200,
                       lambda_scattering = 1,
                       lambda_adv = 5,
-                      display_step=25):
+                      display_step=25,
+                      pretrained_generator = "",
+                      pretrained_discriminator = "" ):
 
         super().__init__()
 
         self.device = device
         self.display_step = display_step
-        self.gen = Pix2PixGenerator(in_channels, out_channels)
-        self.patch_gan = PatchGAN(1)
+
+
+        if len(pretrained_generator) != 0:
+            print(f"Loading Pretrained Generator: {pretrained_generator}")
+            pretrained_generator = os.path.join(os.getcwd(),"models",pretrained_generator)
+            self.gen = torch.load(pretrained_generator)
+            print(self.gen)
+        else:
+            self.gen = Pix2PixGenerator(in_channels, out_channels)
+
+        if len(pretrained_discriminator) != 0:
+            print(f"Loading Pretrained Discriminator: {pretrained_discriminator}")
+            pretrained_discriminator = os.path.join(os.getcwd(),"models",pretrained_discriminator)
+            self.patch_gan = torch.load(pretrained_discriminator)
+        else:
+            self.patch_gan = PatchGAN(1)
 
         # Loss component weights
         self.lr = learning_rate
@@ -42,8 +58,10 @@ class Pix2Pix:
 
         #Loss functions 
         self.adversarial_criterion = nn.BCEWithLogitsLoss()
+
         self.recon_criterion_l1 = nn.L1Loss()
         self.recon_criterion_l2 = nn.MSELoss()
+
         self.vgg_criterion = VGGLoss(self.device)
         self.scattering_f = Scattering2D(J=3, L=8,shape=(input_size, input_size), out_type="array",max_order=2).to(device)
 
@@ -92,6 +110,8 @@ class Pix2Pix:
 
         #segmap loss
         segmap_loss = self.l1_loss_with_mask(fake_images, real_images,seg_map_real)
+
+
         #wavlet scattering loss
         scat_real = self.scattering_f(real_images.contiguous()).squeeze(1)[:,1:,:,:]
         scat_fake = self.scattering_f(fake_images.contiguous()).squeeze(1)[:,1:,:,:]
@@ -119,11 +139,12 @@ class Pix2Pix:
         fake_images = CenterCrop(600)(fake_images)
         # conditioned_images = CenterCrop(100)(conditioned_images)
         real_images = CenterCrop(600)(real_images)
-    ### NOTE TO SELF; I removed the second channel of PATCHGAN, which
-    ### is the conditioned image. In the context of SuperResolution
-    ### It doesn't make too mch sense since we don't have a HR input image. 
-    ### We'd need to upsample the input and that would likely cause shifting
-    ### It will be worth trying it though as an expereiment!
+
+        ### NOTE TO SELF; I removed the second channel of PATCHGAN, which
+        ### is the conditioned image. In the context of SuperResolution
+        ### It doesn't make too mch sense since we don't have a HR input image. 
+        ### We'd need to upsample the input and that would likely cause shifting
+        ### It will be worth trying it though as an expereiment!
         fake_logits = self.patch_gan(fake_images)
         real_logits = self.patch_gan(real_images)
 

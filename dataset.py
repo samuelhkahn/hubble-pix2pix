@@ -223,9 +223,11 @@ class SR_HST_HSC_Dataset(Dataset):
 
         hst_array = self.to_pil(hst_array)
         hsc_array = self.to_pil(hsc_array)
-
+        # print("before Aug")
 
         if self.data_aug == True:
+        #     print("in Aug")
+
             if random.random() > 0.5:
 
                 # Rotate 
@@ -244,6 +246,8 @@ class SR_HST_HSC_Dataset(Dataset):
             if random.random() >0.5:
                 hsc_array  = TF.hflip(hsc_array)
                 hst_array  = TF.hflip(hst_array)
+        # print("After Aug")
+
          #Center Crop 
         hsc_array = TF.center_crop(hsc_array,[100,100])
         hst_array = TF.center_crop(hst_array,[600,600])

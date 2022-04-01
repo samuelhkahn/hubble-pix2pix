@@ -13,9 +13,19 @@ class PatchGAN(nn.Module):
 
     def forward(self, x):
         # x = torch.cat([x, y], axis=1)
+        # print("x:",x.shape)
         x0 = self.d1(x)
+        # print("x0:",x0.shape)
+
         x1 = self.d2(x0)
+        # print("x1:",x1.shape)
+
         x2 = self.d3(x1)
+        # print("x2:",x2.shape)
+
         x3 = self.d4(x2)
+        # print("x3:",x3.shape)
+
         xn = self.final(x3)
+        # print("x4:",xn.shape)
         return xn

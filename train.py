@@ -76,6 +76,8 @@ def main():
 
 	disc_update_freq = int(config["DISC_UPDATE_FREQ"]["disc_update_freq"])
 
+	pretrained_generator = config["PRETRAINED_GENERATOR"]["pretrained_generator"]
+	pretrained_discriminator = 	config["PRETRAINED_DISCRIMINATOR"]["pretrained_discriminator"]
 
 	# Adding Comet Logging
 	api_key = os.environ['COMET_ML_ASTRO_API_KEY']
@@ -120,7 +122,9 @@ def main():
 					 lambda_vgg=lambda_vgg, 
 					 lambda_scattering=lambda_scattering,
 					 lambda_adv=lambda_adv, 
-					 display_step=display_step)
+					 display_step=display_step,
+					 pretrained_generator = pretrained_generator,
+					 pretrained_discriminator = pretrained_discriminator)
 
 	cur_step = 0
 
