@@ -27,14 +27,14 @@ class Pix2Pix:
         self.device = device
         self.display_step = display_step
 
-
+        ## Initialize UNET & Patchgan - Load pretrained model if specfied
         if len(pretrained_generator) != 0:
             print(f"Loading Pretrained Generator: {pretrained_generator}")
             pretrained_generator = os.path.join(os.getcwd(),"models",pretrained_generator)
             self.gen = torch.load(pretrained_generator)
-            print(self.gen)
         else:
             self.gen = Pix2PixGenerator(in_channels, out_channels)
+            self.gen = self.gen.apply(self._weights_init)
 
         if len(pretrained_discriminator) != 0:
             print(f"Loading Pretrained Discriminator: {pretrained_discriminator}")
@@ -42,6 +42,8 @@ class Pix2Pix:
             self.patch_gan = torch.load(pretrained_discriminator)
         else:
             self.patch_gan = PatchGAN(1)
+            self.patch_gan = self.patch_gan.apply(self._weights_init)
+
 
         # Loss component weights
         self.lr = learning_rate
@@ -52,9 +54,7 @@ class Pix2Pix:
         self.lambda_segmap = lambda_segmap
 
 
-        # intializing weights
-        self.gen = self.gen.apply(self._weights_init)
-        self.patch_gan = self.patch_gan.apply(self._weights_init)
+
 
         #Loss functions 
         self.adversarial_criterion = nn.BCEWithLogitsLoss()
