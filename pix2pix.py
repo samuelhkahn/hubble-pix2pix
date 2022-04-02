@@ -6,6 +6,9 @@ from torchvision.transforms import CenterCrop
 from vgg19_loss import VGGLoss
 from kymatio.torch import Scattering2D
 import os
+from torchvision import transforms 
+from torchvision.transforms.functional import InterpolationMode as IMode
+
 class Pix2Pix:
 
     def __init__(self,in_channels, 
@@ -41,7 +44,7 @@ class Pix2Pix:
             pretrained_discriminator = os.path.join(os.getcwd(),"models",pretrained_discriminator)
             self.patch_gan = torch.load(pretrained_discriminator)
         else:
-            self.patch_gan = PatchGAN(1)
+            self.patch_gan = PatchGAN(2)
             self.patch_gan = self.patch_gan.apply(self._weights_init)
 
 
@@ -70,6 +73,13 @@ class Pix2Pix:
         self.gen_opt = torch.optim.Adam(self.gen.parameters(), lr=self.lr)
         self.disc_opt = torch.optim.Adam(self.patch_gan.parameters(), lr=self.lr)
 
+
+        self.hr_transforms = transforms.Compose([
+            transforms.ToPILImage(),
+            transforms.Resize(768, interpolation=IMode.BILINEAR),
+            transforms.ToTensor()
+        ])
+
         # put models on proper device
         self.gen.to(self.device)
         self.patch_gan.to(self.device)
@@ -95,11 +105,16 @@ class Pix2Pix:
 
         #Crop off sides so not computed in loss 
         fake_images = CenterCrop(600)(fake_images)
-        conditioned_images = CenterCrop(100)(conditioned_images)
         real_images = CenterCrop(600)(real_images)
         seg_map_real =  CenterCrop(600)(seg_map_real)
 
-        disc_logits = self.patch_gan(fake_images)
+        # Upsample LR image so wecan input as second channel of discriminator
+        conditioned_images = conditioned_images.squeeze(1)
+        conditioned_images =  self.hr_transforms(conditioned_images)
+        conditioned_images = conditioned_images.unsqueeze(1)
+        conditioned_images = CenterCrop(600)(conditioned_images)
+
+        disc_logits = self.patch_gan(fake_images,conditioned_images)
 
         adversarial_loss = self.adversarial_criterion(disc_logits, torch.ones_like(disc_logits))
 
@@ -123,8 +138,7 @@ class Pix2Pix:
                      + self.lambda_vgg*vgg_loss\
                      + self.lambda_scattering*scattering_loss\
                      + self.lambda_segmap*segmap_loss)
-        # scattering_loss = 0
-        print(self.lambda_segmap,segmap_loss)
+
         return total_loss,adversarial_loss,recon_loss,vgg_loss,scattering_loss,segmap_loss
 
     def generate_fake_images(self, conditioned_images):
@@ -137,16 +151,22 @@ class Pix2Pix:
 
         #Crop off sides so not computed in loss 
         fake_images = CenterCrop(600)(fake_images)
-        # conditioned_images = CenterCrop(100)(conditioned_images)
         real_images = CenterCrop(600)(real_images)
+
+        # Upsample LR image so wecan input as second channel of discriminator
+        conditioned_images = conditioned_images.squeeze(1)
+        conditioned_images =  self.hr_transforms(conditioned_images)
+        conditioned_images = conditioned_images.unsqueeze(1)
+        conditioned_images = CenterCrop(600)(conditioned_images)
+
 
         ### NOTE TO SELF; I removed the second channel of PATCHGAN, which
         ### is the conditioned image. In the context of SuperResolution
         ### It doesn't make too mch sense since we don't have a HR input image. 
         ### We'd need to upsample the input and that would likely cause shifting
         ### It will be worth trying it though as an expereiment!
-        fake_logits = self.patch_gan(fake_images)
-        real_logits = self.patch_gan(real_images)
+        fake_logits = self.patch_gan(fake_images,conditioned_images)
+        real_logits = self.patch_gan(real_images,conditioned_images)
 
         fake_loss = self.adversarial_criterion(fake_logits, torch.zeros_like(fake_logits))
         real_loss = self.adversarial_criterion(real_logits, torch.ones_like(real_logits))
