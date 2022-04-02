@@ -155,10 +155,12 @@ class Pix2Pix:
 
         # Upsample LR image so wecan input as second channel of discriminator
         conditioned_images = conditioned_images.squeeze(1)
+        print(conditioned_images.shape)
+
         conditioned_images =  self.hr_transforms(conditioned_images)
         print(conditioned_images.shape)
+
         conditioned_images = conditioned_images.unsqueeze(1)
-        print(conditioned_images.shape)
         conditioned_images = CenterCrop(600)(conditioned_images)
 
 
