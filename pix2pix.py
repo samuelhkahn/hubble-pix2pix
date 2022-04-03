@@ -112,6 +112,7 @@ class Pix2Pix:
         conditioned_images = conditioned_images.squeeze(1)
         conditioned_images =  self.hr_transforms(conditioned_images)
         conditioned_images = conditioned_images.unsqueeze(1)
+        
         conditioned_images = CenterCrop(600)(conditioned_images)
 
         disc_logits = self.patch_gan(fake_images,conditioned_images)
