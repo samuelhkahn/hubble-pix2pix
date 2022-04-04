@@ -83,33 +83,29 @@ class SR_HST_HSC_Dataset(Dataset):
         self.to_pil = transforms.ToPILImage()
         self.to_tensor = transforms.ToTensor()
 
-        # self.lr_transforms = transforms.Compose([
-        #     Decimate(6,True,1),
-        #     transforms.ToPILImage()
-        # ])
-        # self.lr_transforms = transforms.Compose([
-        #     transforms.ToPILImage(),
-        #     transforms.Resize(100, interpolation=IMode.BICUBIC)
-        # ])
-        # self.lr_transforms = transforms.Compose([
-        #     OpenCVResize(100,cv.INTER_NEAREST),
-        #     transforms.ToPILImage()
-        # ])
         self.hr_transforms = transforms.Compose([
             transforms.ToPILImage(),
-            transforms.Resize(600, interpolation=IMode.NEAREST)
+            transforms.Resize(600, interpolation=IMode.NEAREST),
+            transforms.ToTensor()
+
         ])
+        self.square_pad_hr = SquarePad(84,"reflect")
+        self.square_pad_lr = SquarePad(14,"reflect")
+
 
         # now use it as the replacement of transforms.Pad class
-        self.pad_array_hr=transforms.Compose([
+        self.pad_array_hr =transforms.Compose([
             transforms.ToPILImage(),
-             SquarePad(84,"reflect")
+            self.square_pad_hr
         ])
-
-        self.pad_array_lr=transforms.Compose([
+        self.pad_array_lr =transforms.Compose([
             transforms.ToPILImage(),
-            SquarePad(14,"reflect")
+            self.square_pad_lr
         ])
+        # self.pad_pil=transforms.Compose([
+        #     self.square_pad,
+        #     # transforms.Resize(128)
+        # ])
         
     def load_fits(self, file_path: str) -> np.ndarray:
         cutout = fits.open(file_path)
@@ -223,11 +219,9 @@ class SR_HST_HSC_Dataset(Dataset):
 
         hst_array = self.to_pil(hst_array)
         hsc_array = self.to_pil(hsc_array)
-        # print("before Aug")
+
 
         if self.data_aug == True:
-        #     print("in Aug")
-
             if random.random() > 0.5:
 
                 # Rotate 
@@ -246,8 +240,6 @@ class SR_HST_HSC_Dataset(Dataset):
             if random.random() >0.5:
                 hsc_array  = TF.hflip(hsc_array)
                 hst_array  = TF.hflip(hst_array)
-        # print("After Aug")
-
          #Center Crop 
         hsc_array = TF.center_crop(hsc_array,[100,100])
         hst_array = TF.center_crop(hst_array,[600,600])
@@ -282,13 +274,6 @@ class SR_HST_HSC_Dataset(Dataset):
         elif self.transform_type == "clip_min_max_norm":
             hst_transformation = self.min_max_normalization(hst_array,self.hst_min,self.hst_max)
             hsc_transformation = self.min_max_normalization(hsc_array,self.hsc_min,self.hsc_max)
-
-        elif self.transform_type == "ds9_scale":
-            hst_clipped = self.clip(hst_array,use_data=False)[0]
-            hst_transformation = self.ds9_scaling(hst_clipped,offset = 1)
-
-            hsc_clipped = self.clip(hsc_array,use_data=False)[0]
-            hsc_transformation = self.ds9_scaling(hsc_clipped,offset = 1)
         elif self.transform_type == "hst_downscale":
             hst_clipped = self.clip(hst_array,use_data=False)[0]
             hst_transformation = self.ds9_scaling(hst_clipped,offset = 1)
@@ -299,14 +284,21 @@ class SR_HST_HSC_Dataset(Dataset):
 
             hsc_hr_clipped = self.clip(hsc_array,use_data=False)[0]
             hsc_transformation = self.ds9_scaling(hsc_hr_clipped,offset = 1)
-            
+        elif self.transform_type == "ds9_scale":
+            hst_clipped = self.clip(hst_array,use_data=False)[0]
+            hst_transformation = self.ds9_scaling(hst_clipped,offset = 1)
+
+            hsc_clipped = self.clip(hsc_array,use_data=False)[0]
+            hsc_transformation = self.ds9_scaling(hsc_clipped,offset = 1)
+            hsc_hr = self.hr_transforms(hsc_transformation)
 
 
 
         # Add Segmap to second channel to ensure proper augmentation  
         
         hst_seg_map = self.to_tensor(self.pad_array_hr(hst_seg_map)).squeeze(0)
-        hsc = self.to_tensor(self.pad_array_lr(hsc_transformation)).squeeze(0)
+        hsc = self.to_tensor(self.pad_array_lr(hsc_array)).squeeze(0)
         hst = self.to_tensor(self.pad_array_hr(hst_transformation)).squeeze(0)
+        hsc_hr = self.to_tensor(self.pad_array_hr(hsc_hr)).squeeze(0)
 
-        return  hst,hsc,hst_seg_map
+        return  hst,hsc,hsc_hr,hst_seg_map

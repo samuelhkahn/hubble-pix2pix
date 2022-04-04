@@ -56,9 +56,6 @@ class Pix2Pix:
         self.lambda_adv = lambda_adv
         self.lambda_segmap = lambda_segmap
 
-
-
-
         #Loss functions 
         self.adversarial_criterion = nn.BCEWithLogitsLoss()
 
@@ -108,10 +105,10 @@ class Pix2Pix:
         real_images = CenterCrop(600)(real_images)
         seg_map_real =  CenterCrop(600)(seg_map_real)
 
-        # Upsample LR image so wecan input as second channel of discriminator
-        conditioned_images = conditioned_images.squeeze(1)
-        conditioned_images =  self.hr_transforms(conditioned_images)
-        conditioned_images = conditioned_images.unsqueeze(1)
+        # # Upsample LR image so wecan input as second channel of discriminator
+        # conditioned_images = conditioned_images.squeeze(1)
+        # conditioned_images =  self.hr_transforms(conditioned_images)
+        # conditioned_images = conditioned_images.unsqueeze(1)
         
         conditioned_images = CenterCrop(600)(conditioned_images)
 
@@ -147,22 +144,23 @@ class Pix2Pix:
         fake_images = self.gen(conditioned_images)
         return fake_images
 
-    def _disc_step(self, real_images, conditioned_images):
+    def _disc_step(self, real_images, conditioned_images,hsc_hr):
         fake_images = self.gen(conditioned_images).detach()
 
         #Crop off sides so not computed in loss 
         fake_images = CenterCrop(600)(fake_images)
         real_images = CenterCrop(600)(real_images)
+        hsc_hr = CenterCrop(600)(hsc_hr)
 
         # Upsample LR image so wecan input as second channel of discriminator
-        conditioned_images = conditioned_images.squeeze(1)
-        print(conditioned_images.shape)
+        # conditioned_images = conditioned_images.squeeze(1)
+        # print(conditioned_images.shape)
 
-        conditioned_images =  self.hr_transforms(conditioned_images)
-        print(conditioned_images.shape)
+        # conditioned_images =  self.hr_transforms(conditioned_images)
+        # print(conditioned_images.shape)
 
-        conditioned_images = conditioned_images.unsqueeze(1)
-        conditioned_images = CenterCrop(600)(conditioned_images)
+        # conditioned_images = conditioned_images.unsqueeze(1)
+        # conditioned_images = CenterCrop(600)(conditioned_images)
 
 
         ### NOTE TO SELF; I removed the second channel of PATCHGAN, which
@@ -170,25 +168,25 @@ class Pix2Pix:
         ### It doesn't make too mch sense since we don't have a HR input image. 
         ### We'd need to upsample the input and that would likely cause shifting
         ### It will be worth trying it though as an expereiment!
-        fake_logits = self.patch_gan(fake_images,conditioned_images)
-        real_logits = self.patch_gan(real_images,conditioned_images)
+        fake_logits = self.patch_gan(fake_images,hsc_hr)
+        real_logits = self.patch_gan(real_images,hsc_hr)
 
         fake_loss = self.adversarial_criterion(fake_logits, torch.zeros_like(fake_logits))
         real_loss = self.adversarial_criterion(real_logits, torch.ones_like(real_logits))
         return (real_loss + fake_loss) / 2
 
 
-    def training_step(self, real,condition,seg_map_real, optimizer):
+    def training_step(self, real, condition, hsc_hr, seg_map_real, optimizer):
 
         loss = None
         if optimizer == "discriminator":
-            loss = self._disc_step(real, condition)
+            loss = self._disc_step(real,condition, hsc_hr)
             self.disc_opt.zero_grad()
             loss.backward()
             self.disc_opt.step()
             return loss
         elif optimizer == "generator":
-            total_loss,adversarial_loss,recon_loss,vgg_loss,scattering_loss,segmap_loss = self._gen_step(real, condition, seg_map_real)
+            total_loss,adversarial_loss,recon_loss,vgg_loss,scattering_loss,segmap_loss = self._gen_step(real,condition, seg_map_real)
             self.gen_opt.zero_grad()
             total_loss.backward()
             self.gen_opt.step()

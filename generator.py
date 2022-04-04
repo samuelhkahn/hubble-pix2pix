@@ -73,7 +73,6 @@ class Pix2PixGenerator(nn.Module):
         # x = self.upsample(x)
         # x_in = x
         # Encode & Skip Connections
-        print(x.shape)
         x = self.ps_blocks(x)
         skips_cons = []
         for encoder in self.encoders:

@@ -13,8 +13,8 @@ import sys
 
 def collate_fn(batch):
 
-	hrs, lrs, hr_segs = [], [], []
-	for hr,lr,hr_seg in batch:
+	hrs, lrs,hsc_hrs, hr_segs = [], [], [], []
+	for hr,lr,hsc_hr,hr_seg in batch:
 		hr_nan = torch.isnan(hr).any()
 		lr_nan = torch.isnan(lr).any()
 
@@ -24,18 +24,20 @@ def collate_fn(batch):
 		good_vals = [hr_nan,lr_nan,hr_inf,lr_inf]
 
 		# print(f"HR Shape: {hr.shape}")
-		# print(f"LR Up Shape: {lr_up.shape}")
+		# print(f"HR Up Shape: {hsc_hr.shape}")
 		# print(f"LR Shape: {lr.shape}")
 		# print(f"HR Seg Shape: {hr_seg.shape}")
-		if hr.shape == (768,768) and lr.shape == (128,128) and True not in good_vals:
+		if hr.shape == (768,768) and lr.shape == (128,128) and hsc_hr.shape == (768,768) and True not in good_vals:
 			hrs.append(hr)
 			lrs.append(lr)
+			hsc_hrs.append(hsc_hr)
 			hr_segs.append(hr_seg)
 
 	hrs = torch.stack(hrs, dim=0)
 	lrs = torch.stack(lrs, dim=0)
+	hsc_hrs = torch.stack(hsc_hrs, dim=0)
 	hr_segs = torch.stack(hr_segs, dim=0)
-	return hrs,  lrs, hr_segs
+	return hrs, lrs, hsc_hrs, hr_segs
 
 
 def main():
@@ -108,7 +110,7 @@ def main():
 	# Create Dataloader
 	dataloader = torch.utils.data.DataLoader(
 	    SR_HST_HSC_Dataset(hst_path = hst_path , hsc_path = hsc_path, hr_size=[hst_dim, hst_dim], 
-	    	lr_size=[hsc_dim, hsc_dim], transform_type = "paired_image_translation",data_aug = data_aug,experiment = experiment), 
+	    	lr_size=[hsc_dim, hsc_dim], transform_type = "ds9_scale",data_aug = data_aug,experiment = experiment), 
 	    batch_size=batch_size, pin_memory=True, shuffle=True, collate_fn = collate_fn)
 
 
@@ -129,10 +131,11 @@ def main():
 	cur_step = 0
 
 	while cur_step < total_steps:
-		for hr_real,lr, seg_map_real in tqdm(dataloader, position=0):
+		for hr_real,lr,hsc_hr, seg_map_real in tqdm(dataloader, position=0):
 			# Conv2d expects (n_samples, channels, height, width)
 			# So add the channel dimension
 			hr_real = hr_real.unsqueeze(1).to(device)
+			hsc_hr = hsc_hr.unsqueeze(1).to(device)
 			lr = lr.unsqueeze(1).to(device) # condition
 			seg_map_real = seg_map_real.unsqueeze(1).to(device)
 			# print(f"HR Shape: {hr_real.shape}")
@@ -140,9 +143,9 @@ def main():
 			# print(f"LR  Shape: {lr.shape}")
 			# print(f"HR Seg Realy Shape: {seg_map_real.shape}")
 			if cur_step%disc_update_freq==0:
-				disc_loss = pix2pix.training_step(hr_real,lr,seg_map_real,"discriminator").item()
+				disc_loss = pix2pix.training_step(hr_real,lr,hsc_hr,seg_map_real,"discriminator").item()
 
-			losses = pix2pix.training_step(hr_real,lr,seg_map_real,"generator")
+			losses = pix2pix.training_step(hr_real,lr,hsc_hr,seg_map_real,"generator")
 
 
 			gen_loss,adv_loss,recon_loss,vgg_loss,scattering_loss,segmap_loss = losses[0].item(),\
