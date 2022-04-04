@@ -297,7 +297,7 @@ class SR_HST_HSC_Dataset(Dataset):
         # Add Segmap to second channel to ensure proper augmentation  
         
         hst_seg_map = self.to_tensor(self.pad_array_hr(hst_seg_map)).squeeze(0)
-        hsc = self.to_tensor(self.pad_array_lr(hsc_array)).squeeze(0)
+        hsc = self.to_tensor(self.pad_array_lr(hsc_transformation)).squeeze(0)
         hst = self.to_tensor(self.pad_array_hr(hst_transformation)).squeeze(0)
         hsc_hr = self.to_tensor(self.pad_array_hr(hsc_hr)).squeeze(0)
 
