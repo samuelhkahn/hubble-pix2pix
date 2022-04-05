@@ -102,10 +102,11 @@ def main():
 	experiment.log_parameter("lambda_recon",lambda_recon)
 	experiment.log_parameter("lambda_vgg",lambda_vgg)
 	experiment.log_parameter("lambda_scattering",lambda_scattering)
+	experiment.log_parameter("lambda_segrecon",lambda_segrecon)
 	experiment.log_parameter("lambda_adv",lambda_adv)
 	experiment.log_parameter("disc_update_freq",disc_update_freq)
 
-	model_name = f"global_lr={lr}_recon={lambda_recon}_vgg={lambda_vgg}_scatter={lambda_scattering}_adv={lambda_adv}_discupdate={disc_update_freq}"
+	model_name = f"global_lr={lr}_recon={lambda_recon}_segrecon={lambda_segmap}_vgg={lambda_vgg}_scatter={lambda_scattering}_adv={lambda_adv}_discupdate={disc_update_freq}"
 	
 	# Create Dataloader
 	dataloader = torch.utils.data.DataLoader(
