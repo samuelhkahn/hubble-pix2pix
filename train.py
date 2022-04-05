@@ -102,7 +102,7 @@ def main():
 	experiment.log_parameter("lambda_recon",lambda_recon)
 	experiment.log_parameter("lambda_vgg",lambda_vgg)
 	experiment.log_parameter("lambda_scattering",lambda_scattering)
-	experiment.log_parameter("lambda_segrecon",lambda_segrecon)
+	experiment.log_parameter("lambda_segrecon",lambda_segmap)
 	experiment.log_parameter("lambda_adv",lambda_adv)
 	experiment.log_parameter("disc_update_freq",disc_update_freq)
 
