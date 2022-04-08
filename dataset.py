@@ -213,9 +213,11 @@ class SR_HST_HSC_Dataset(Dataset):
 
         hst_image = os.path.join(self.hst_path,self.filenames[idx])
         hsc_image = os.path.join(self.hsc_path,self.filenames[idx])
-        
-        hst_array = self.load_fits(hst_image)
-        hsc_array = self.load_fits(hsc_image)
+        try:
+            hst_array = self.load_fits(hst_image)
+            hsc_array = self.load_fits(hsc_image)
+        except TypeError as e:
+            print(e)
 
         hst_array = self.to_pil(hst_array)
         hsc_array = self.to_pil(hsc_array)
@@ -295,10 +297,9 @@ class SR_HST_HSC_Dataset(Dataset):
 
 
         # Add Segmap to second channel to ensure proper augmentation  
-        
         hst_seg_map = self.to_tensor(self.pad_array_hr(hst_seg_map)).squeeze(0)
         hsc = self.to_tensor(self.pad_array_lr(hsc_transformation)).squeeze(0)
         hst = self.to_tensor(self.pad_array_hr(hst_transformation)).squeeze(0)
         hsc_hr = self.to_tensor(self.pad_array_hr(hsc_hr)).squeeze(0)
 
-        return  hst,hsc,hsc_hr,hst_seg_map
+        return hst,hsc,hsc_hr,hst_seg_map
