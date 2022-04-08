@@ -14,8 +14,28 @@ class Pix2PixGenerator(nn.Module):
         - Decoder: CD512-CD1024-CD1024-C1024-C1024-C512 -C256-C128
         """
         super().__init__()
-        # self.upsample = nn.Upsample(scale_factor=6, mode='bicubic',align_corners = True)
 
+       # Same Convolutions
+        same_convs = [nn.Conv2d(1, 1, kernel_size=1, stride=1, padding=0) for _ in range(5)]
+        self.same_convs = nn.Sequential(*same_convs)
+
+       # Sub-Pixel Convolutions (PixelShuffle) 
+        ps_blocks = []
+        for i in range(n_ps_blocks):
+
+            if i == 0:
+                ps_blocks += [
+                nn.Conv2d(1, 9*1, kernel_size=3, padding=1),
+                nn.PixelShuffle(3),
+                nn.PReLU(),]
+            else:
+                ps_blocks += [
+                nn.Conv2d(1, 4*1, kernel_size=3, padding=1),
+                nn.PixelShuffle(2),
+                nn.PReLU(),
+            ]
+
+        self.ps_blocks = nn.Sequential(*ps_blocks)
         # encoder/donwsample convs
         self.encoders = [
             DownSampleConv(in_channels, 64, batchnorm=False),  # bs x 64 x 128 x 128
@@ -44,24 +64,9 @@ class Pix2PixGenerator(nn.Module):
         #                         nn.Upsample(scale_factor = 2, mode='nearest'),
         #                         nn.ReflectionPad2d(1),
         #                         nn.Conv2d(64, 16,kernel_size=3, stride=1, padding=0))
+
         self.final_conv = nn.Conv2d(1, 1, kernel_size=1, stride=1, padding=0)
-            # Sub-Pixel Convolutions (PixelShuffle) 
-        ps_blocks = []
-        for i in range(n_ps_blocks):
 
-            if i == 0:
-                ps_blocks += [
-                nn.Conv2d(1, 9*1, kernel_size=3, padding=1),
-                nn.PixelShuffle(3),
-                nn.PReLU(),]
-            else:
-                ps_blocks += [
-                nn.Conv2d(1, 4*1, kernel_size=3, padding=1),
-                nn.PixelShuffle(2),
-                nn.PReLU(),
-            ]
-
-        self.ps_blocks = nn.Sequential(*ps_blocks)
 
         self.tanh = nn.Tanh()
 
@@ -72,6 +77,8 @@ class Pix2PixGenerator(nn.Module):
         # Original Image
         # x = self.upsample(x)
         # x_in = x
+        # Same convs 
+        x = self.same_convs(x)
         # Encode & Skip Connections
         x = self.ps_blocks(x)
         skips_cons = []
