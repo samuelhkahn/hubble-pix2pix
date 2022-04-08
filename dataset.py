@@ -213,11 +213,12 @@ class SR_HST_HSC_Dataset(Dataset):
 
         hst_image = os.path.join(self.hst_path,self.filenames[idx])
         hsc_image = os.path.join(self.hsc_path,self.filenames[idx])
+
         try:
             hst_array = self.load_fits(hst_image)
             hsc_array = self.load_fits(hsc_image)
-        except TypeError as e:
-            print(e)
+        except TypeError as e: 
+            return (None, None, None, None) # handle in collate_fn
 
         hst_array = self.to_pil(hst_array)
         hsc_array = self.to_pil(hsc_array)

@@ -15,6 +15,9 @@ def collate_fn(batch):
 
 	hrs, lrs,hsc_hrs, hr_segs = [], [], [], []
 	for hr,lr,hsc_hr,hr_seg in batch:
+		if any(el is None for el in [hr,lr,hsc_hr,hr_seg]): #Skip corrupted files
+			continue
+
 		hr_nan = torch.isnan(hr).any()
 		lr_nan = torch.isnan(lr).any()
 
