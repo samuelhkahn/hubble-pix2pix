@@ -78,7 +78,7 @@ class Pix2PixGenerator(nn.Module):
         # x = self.upsample(x)
         # x_in = x
         # Same convs 
-        x = self.same_convs(x)
+       # x = self.same_convs(x)
         # Encode & Skip Connections
         x = self.ps_blocks(x)
         skips_cons = []
