@@ -63,7 +63,7 @@ class Pix2Pix:
         self.recon_criterion_l2 = nn.MSELoss()
 
         self.vgg_criterion = VGGLoss(self.device)
-        self.scattering_f = Scattering2D(J=3, L=8,shape=(input_size, input_size), out_type="array",max_order=2).to(device)
+        self.scattering_f = Scattering2D(J=3, L=8,shape=(768, 768), out_type="array",max_order=2).to(device)
 
 
         #Optimizers 
@@ -101,23 +101,17 @@ class Pix2Pix:
         fake_images = self.gen(conditioned_images)
 
         #Crop off sides so not computed in loss 
-        fake_images = CenterCrop(600)(fake_images)
-        real_images = CenterCrop(600)(real_images)
-        seg_map_real =  CenterCrop(600)(seg_map_real)
-
-        # # Upsample LR image so wecan input as second channel of discriminator
-        # conditioned_images = conditioned_images.squeeze(1)
-        # conditioned_images =  self.hr_transforms(conditioned_images)
-        # conditioned_images = conditioned_images.unsqueeze(1)
+        # fake_images = CenterCrop(600)(fake_images)
+        # real_images = CenterCrop(600)(real_images)
+        # seg_map_real =  CenterCrop(600)(seg_map_real)
         
-        conditioned_images = CenterCrop(600)(conditioned_images)
+        # conditioned_images = CenterCrop(600)(conditioned_images)
 
-        disc_logits = self.patch_gan(fake_images,conditioned_images)
+        disc_logits = self.patch_gan(CenterCrop(600)(fake_images),CenterCrop(600)(conditioned_images))
 
         adversarial_loss = self.adversarial_criterion(disc_logits, torch.ones_like(disc_logits))
 
         # calculate reconstruction loss
-        #recon_loss = self.recon_criterion_l1(fake_images, real_images)
         recon_loss = self.recon_criterion_l1(fake_images, real_images)
         vgg_loss = self.vgg_criterion(fake_images, real_images)
 
@@ -152,22 +146,6 @@ class Pix2Pix:
         real_images = CenterCrop(600)(real_images)
         hsc_hr = CenterCrop(600)(hsc_hr)
 
-        # Upsample LR image so wecan input as second channel of discriminator
-        # conditioned_images = conditioned_images.squeeze(1)
-        # print(conditioned_images.shape)
-
-        # conditioned_images =  self.hr_transforms(conditioned_images)
-        # print(conditioned_images.shape)
-
-        # conditioned_images = conditioned_images.unsqueeze(1)
-        # conditioned_images = CenterCrop(600)(conditioned_images)
-
-
-        ### NOTE TO SELF; I removed the second channel of PATCHGAN, which
-        ### is the conditioned image. In the context of SuperResolution
-        ### It doesn't make too mch sense since we don't have a HR input image. 
-        ### We'd need to upsample the input and that would likely cause shifting
-        ### It will be worth trying it though as an expereiment!
         fake_logits = self.patch_gan(fake_images,hsc_hr)
         real_logits = self.patch_gan(real_images,hsc_hr)
 
