@@ -5,7 +5,7 @@ from up_sample_conv import UpSampleConv
 import torch
 class Pix2PixGenerator(nn.Module):
 
-    def __init__(self, in_channels, out_channels,n_ps_blocks=2,resize_conv=True):
+    def __init__(self, in_channels, out_channels,n_ps_blocks=2,resize_conv=False):
         """
         Paper details:
         - Encoder: C64-C128-C256-C512-C512-C512-C512-C512
@@ -50,20 +50,22 @@ class Pix2PixGenerator(nn.Module):
 
         # decoder/upsample convs
         self.decoders = [
-            UpSampleConv(512, 512,  dropout=True),  # bs x 512 x 2 x 2
-            UpSampleConv(1024, 512, dropout=True),  # bs x 512 x 4 x 4
-            UpSampleConv(1024, 512, dropout=True),  # bs x 512 x 8 x 8
-            UpSampleConv(1024, 512),  # bs x 512 x 16 x 16
-            UpSampleConv(1024, 256),  # bs x 256 x 32 x 32
-            UpSampleConv(512, 128),  # bs x 128 x 64 x 64
-            UpSampleConv(256, 64),  # bs x 64 x 128 x 128
+            UpSampleConv(512, 512,  dropout=True,resize_convolution=True),  # bs x 512 x 2 x 2
+            UpSampleConv(1024, 512, dropout=True,resize_convolution=True),  # bs x 512 x 4 x 4
+            UpSampleConv(1024, 512, dropout=True,resize_convolution=True),  # bs x 512 x 8 x 8
+            UpSampleConv(1024, 512,resize_convolution=True),  # bs x 512 x 16 x 16
+            UpSampleConv(1024, 256,resize_convolution=True),  # bs x 256 x 32 x 32
+            UpSampleConv(512, 128,resize_convolution=True),  # bs x 128 x 64 x 64
+            UpSampleConv(256, 64,resize_convolution=True),  # bs x 64 x 128 x 128
+            # UpSampleConv(128, 32,resize_convolution=True),  # bs x 64 x 128 x 128
+
         ]
         self.decoder_channels = [512, 512, 512, 512, 256, 128, 64]
-        self.up_conv = nn.ConvTranspose2d(64, out_channels, kernel_size=3, stride=2, padding=1,output_padding=1)
-        # self.up_conv = nn.Sequential(
-        #                         nn.Upsample(scale_factor = 2, mode='nearest'),
-        #                         nn.ReflectionPad2d(1),
-        #                         nn.Conv2d(64, 16,kernel_size=3, stride=1, padding=0))
+        # self.up_conv = nn.ConvTranspose2d(64, out_channels, kernel_size=3, stride=2, padding=1,output_padding=1)
+        self.up_conv = nn.Sequential(
+                                nn.Upsample(scale_factor = 2, mode='nearest'),
+                                nn.ReflectionPad2d(1),
+                                nn.Conv2d(64, out_channels,kernel_size=3, stride=1, padding=0))
 
         self.final_conv = nn.Conv2d(1, 1, kernel_size=1, stride=1, padding=0)
 
@@ -105,6 +107,8 @@ class Pix2PixGenerator(nn.Module):
 
         #Up sample
         x = self.up_conv(x)
+        # print("After Up_Conv",x.shape)
+
 
 
         # Add input image (HSC) as "skip connection"
