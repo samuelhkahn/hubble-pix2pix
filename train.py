@@ -109,8 +109,8 @@ def main():
 	experiment.log_parameter("lambda_adv",lambda_adv)
 	experiment.log_parameter("disc_update_freq",disc_update_freq)
 
-	model_name = f"same_conv_before_ps_global_lr={lr}_recon={lambda_recon}_segrecon={lambda_segmap}_vgg={lambda_vgg}_scatter={lambda_scattering}_adv={lambda_adv}_discupdate={disc_update_freq}"
-	
+	model_name = f"transposed_conv_global_lr={lr}_recon={lambda_recon}_segrecon={lambda_segmap}_vgg={lambda_vgg}_scatter={lambda_scattering}_adv={lambda_adv}_discupdate={disc_update_freq}"
+	print(model_name)
 	# Create Dataloader
 	dataloader = torch.utils.data.DataLoader(
 	    SR_HST_HSC_Dataset(hst_path = hst_path , hsc_path = hsc_path, hr_size=[hst_dim, hst_dim], 
