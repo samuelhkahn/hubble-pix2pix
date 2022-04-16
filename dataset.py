@@ -249,7 +249,12 @@ class SR_HST_HSC_Dataset(Dataset):
 
         hsc_array = np.array(hsc_array)
         hst_array = np.array(hst_array)
-        hst_seg_map = self.get_segmentation_map(hst_array)
+        try:
+            hst_seg_map = self.get_segmentation_map(hst_array)
+        except:
+            return (None, None, None, None) # handle in collate_fn
+
+
         
 
         # Sigmoid Scaling
