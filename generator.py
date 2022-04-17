@@ -3,6 +3,9 @@ import torch.nn as nn
 from down_sample_conv import DownSampleConv
 from up_sample_conv import UpSampleConv
 import torch
+import torchvision.transforms as transforms
+from torchvision.transforms.functional import InterpolationMode as IMode
+
 class Pix2PixGenerator(nn.Module):
 
     def __init__(self, in_channels, out_channels,n_ps_blocks=2,resize_conv=True):
@@ -64,8 +67,12 @@ class Pix2PixGenerator(nn.Module):
         #                         nn.Upsample(scale_factor = 2, mode='nearest'),
         #                         nn.ReflectionPad2d(1),
         #                         nn.Conv2d(64, 16,kernel_size=3, stride=1, padding=0))
-
-        self.final_conv = nn.Conv2d(1, 1, kernel_size=1, stride=1, padding=0)
+        self.upsample = transforms.Compose([
+            transforms.ToPILImage(),
+            transforms.Resize(768, interpolation=IMode.BILINEAR),
+            transforms.ToTensor()
+        ])
+        self.final_conv = nn.Conv2d(2, 1, kernel_size=1, stride=1, padding=0)
 
 
         self.tanh = nn.Tanh()
@@ -75,8 +82,9 @@ class Pix2PixGenerator(nn.Module):
 
     def forward(self, x):
         # Original Image
-        # x = self.upsample(x)
-        x_in = x
+        print(x.shape)
+        x_in = self.upsample(x.squeeze(1))
+        print(x_in.shape)
         # Same convs 
        # x = self.same_convs(x)
         # Encode & Skip Connections
@@ -104,12 +112,13 @@ class Pix2PixGenerator(nn.Module):
         x = self.decoders[-1](x)
 
         #Up sample
+        print(x.shape)
         x = self.up_conv(x)
-
-
+        # print("UPSAMPLE: ",x_in.shape)
+        # print("BEFOREE CAT: ",x.shape)
         # Add input image (HSC) as "skip connection"
-        # x = torch.cat((x, x_in), axis=1)
-
+        x = torch.cat((x, x_in.unsqueeze(1)), axis=1)
+        # print("AFTER CAT: ",x.shape)
 
         # final conv to go from 2->1 channels
         x = self.final_conv(x)
