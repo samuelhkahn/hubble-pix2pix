@@ -25,12 +25,12 @@ class Pix2PixGenerator(nn.Module):
 
             if i == 0:
                 ps_blocks += [
-                nn.Conv2d(1, 9*1, kernel_size=3, padding=1),
+                nn.Conv2d(1, 9*1, kernel_size=1, stride=1, padding=0),
                 nn.PixelShuffle(3),
                 nn.PReLU(),]
             else:
                 ps_blocks += [
-                nn.Conv2d(1, 4*1, kernel_size=3, padding=1),
+                nn.Conv2d(1, 4*1, kernel_size=1, stride=1, padding=0),
                 nn.PixelShuffle(2),
                 nn.PReLU(),
             ]
