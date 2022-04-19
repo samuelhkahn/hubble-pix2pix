@@ -20,22 +20,26 @@ class Pix2PixGenerator(nn.Module):
         self.same_convs = nn.Sequential(*same_convs)
 
        # Sub-Pixel Convolutions (PixelShuffle) 
-        ps_blocks = []
-        for i in range(n_ps_blocks):
+        # ps_blocks = []
+        # for i in range(n_ps_blocks):
 
-            if i == 0:
-                ps_blocks += [
-                nn.Conv2d(1, 9*1, kernel_size=1, stride=1, padding=0),
-                nn.PixelShuffle(3),
-                nn.PReLU(),]
-            else:
-                ps_blocks += [
-                nn.Conv2d(1, 4*1, kernel_size=1, stride=1, padding=0),
-                nn.PixelShuffle(2),
-                nn.PReLU(),
-            ]
+        #     if i == 0:
+        #         ps_blocks += [
+        #         nn.Conv2d(1, 9*1, kernel_size=1, stride=1, padding=0),
+        #         nn.PixelShuffle(3),
+        #         nn.PReLU(),]
+        #     else:
+        #         ps_blocks += [
+        #         nn.Conv2d(1, 4*1, kernel_size=1, stride=1, padding=0),
+        #         nn.PixelShuffle(2),
+        #         nn.PReLU(),
+        #     ]
 
-        self.ps_blocks = nn.Sequential(*ps_blocks)
+        # self.ps_blocks = nn.Sequential(*ps_blocks)
+        self.ps_blocks = nn.Sequential(
+                                nn.Upsample(scale_factor = 6, mode='nearest'),
+                                # nn.ReflectionPad2d(1),
+                                nn.Conv2d(1, 1,kernel_size=1, stride=1, padding=0))
         # encoder/donwsample convs
         self.encoders = [
             DownSampleConv(in_channels, 64, batchnorm=False),  # bs x 64 x 128 x 128
@@ -81,6 +85,7 @@ class Pix2PixGenerator(nn.Module):
        # x = self.same_convs(x)
         # Encode & Skip Connections
         x = self.ps_blocks(x)
+        # print(x.shape)
         skips_cons = []
         for encoder in self.encoders:
             # print("Before Encoder:",x.shape)
