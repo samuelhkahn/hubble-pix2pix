@@ -173,18 +173,18 @@ class Pix2Pix:
 
         fake_loss = self.adversarial_criterion(fake_logits, torch.zeros_like(fake_logits))
         real_loss = self.adversarial_criterion(real_logits, torch.ones_like(real_logits))
-        return (real_loss + fake_loss) / 2
+        return (real_loss+fake_loss)/2, fake_logits, real_logits
 
 
     def training_step(self, real, condition, hsc_hr, seg_map_real, optimizer):
 
         loss = None
         if optimizer == "discriminator":
-            loss = self._disc_step(real,condition, hsc_hr)
+            loss,fake_logits, real_logits = self._disc_step(real,condition, hsc_hr)
             self.disc_opt.zero_grad()
             loss.backward()
             self.disc_opt.step()
-            return loss
+            return loss,fake_logits, real_logits
         elif optimizer == "generator":
             total_loss,adversarial_loss,recon_loss,vgg_loss,scattering_loss,segmap_loss = self._gen_step(real,condition, seg_map_real)
             self.gen_opt.zero_grad()

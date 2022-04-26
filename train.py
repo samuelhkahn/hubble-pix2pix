@@ -147,7 +147,8 @@ def main():
 			# print(f"LR  Shape: {lr.shape}")
 			# print(f"HR Seg Realy Shape: {seg_map_real.shape}")
 			if cur_step%disc_update_freq==0:
-				disc_loss = pix2pix.training_step(hr_real,lr,hsc_hr,seg_map_real,"discriminator").item()
+				disc_losses = pix2pix.training_step(hr_real,lr,hsc_hr,seg_map_real,"discriminator")
+				disc_loss,fake_logits, real_logits = disc_losses[0].item(),disc_losses[1],disc_losses[2]
 
 			losses = pix2pix.training_step(hr_real,lr,hsc_hr,seg_map_real,"generator")
 
@@ -168,6 +169,11 @@ def main():
 				lr = lr[0,:,:,:].squeeze(0).cpu()
 				fake = fake_images[0,0,:,:].double().cpu()
 
+				real_logits_channel_1 = real_logits[0,0,:,:].cpu()
+				real_logits_channel_2 = real_logits[0,1,:,:].cpu()
+
+				fake_logits_channel_1 = fake_logits[0,0,:,:].cpu()
+				fake_logits_channel_2 = fake_logits[0,1,:,:].cpu()
 
 				img_diff = CenterCrop(600)(fake - hr).cpu().detach().numpy()
 				vmax = np.abs(img_diff).max()
@@ -178,6 +184,11 @@ def main():
 				log_figure(CenterCrop(100)(lr).detach().numpy(),"100x100 Conditioned Image (HSC)",experiment)
 				log_figure(CenterCrop(600)(fake).detach().numpy(),"600x600 Generated Image (SR)",experiment)
 				log_figure(CenterCrop(600)(hr).detach().numpy(),"600x600 Real Image (HST)",experiment)
+
+				log_figure(real_logits_channel_1.detach().numpy(),"Real Disc Logits Channel 1",experiment)
+				log_figure(real_logits_channel_2.detach().numpy(),"Real Disc Logits Channel 2",experiment)
+				log_figure(fake_logits_channel_1.detach().numpy(),"Fake Disc Logits Channel 1",experiment)
+				log_figure(fake_logits_channel_2.detach().numpy(),"Fake Disc Logits Channel 2",experiment)
 
 				log_figure(img_diff,"Paired Image Difference",experiment,cmap="bwr_r",set_lims=True,lims=[-vmax,vmax])
 
