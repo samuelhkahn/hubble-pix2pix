@@ -3,6 +3,7 @@ import torch.nn as nn
 from down_sample_conv import DownSampleConv
 from up_sample_conv import UpSampleConv
 import torch
+from torchlayers.upsample import ConvPixelShuffle
 class Pix2PixGenerator(nn.Module):
 
     def __init__(self, in_channels, out_channels,n_ps_blocks=2,resize_conv=True):
@@ -21,19 +22,24 @@ class Pix2PixGenerator(nn.Module):
 
        # Sub-Pixel Convolutions (PixelShuffle) 
         ps_blocks = []
-        for i in range(n_ps_blocks):
+        ps_blocks += [ConvPixelShuffle(in_channels = 1, out_channels = 1, upscale_factor=3),
+                      nn.PReLU()]
+        ps_blocks += [ConvPixelShuffle(in_channels = 1, out_channels = 1, upscale_factor=2),
+                      nn.PReLU()]
 
-            if i == 0:
-                ps_blocks += [
-                nn.Conv2d(1, 9*1, kernel_size=3, padding=1),
-                nn.PixelShuffle(3),
-                nn.PReLU(),]
-            else:
-                ps_blocks += [
-                nn.Conv2d(1, 4*1, kernel_size=3, padding=1),
-                nn.PixelShuffle(2),
-                nn.PReLU(),
-            ]
+        # for i in range(n_ps_blocks):
+
+        #     if i == 0:
+        #         ps_blocks += [
+        #         nn.Conv2d(1, 9*1, kernel_size=3, padding=1),
+        #         nn.PixelShuffle(3),
+        #         nn.PReLU(),]
+        #     else:
+        #         ps_blocks += [
+        #         nn.Conv2d(1, 4*1, kernel_size=3, padding=1),
+        #         nn.PixelShuffle(2),
+        #         nn.PReLU(),
+        #     ]
 
         self.ps_blocks = nn.Sequential(*ps_blocks)
         # encoder/donwsample convs

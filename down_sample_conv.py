@@ -2,7 +2,7 @@ import torch.nn as nn
 
 class DownSampleConv(nn.Module):
 
-    def __init__(self, in_channels, out_channels, kernel=3, strides=2, padding=1, activation=True, batchnorm=True):
+    def __init__(self, in_channels, out_channels, kernel=4, strides=2, padding=1, activation=True, batchnorm=True):
         """
         Paper details:
         - C64-C128-C256-C512-C512-C512-C512-C512
