@@ -36,16 +36,16 @@ class Pix2Pix:
             pretrained_generator = os.path.join(os.getcwd(),"models",pretrained_generator)
             self.gen = torch.load(pretrained_generator)
         else:
-            self.gen = Pix2PixGenerator(in_channels, out_channels)
-            self.gen = self.gen.apply(self._weights_init)
+            self.gen = Pix2PixGenerator(in_channels, out_channels).to(device)
+            # self.gen = self.gen.apply(self._weights_init)
 
         if len(pretrained_discriminator) != 0:
             print(f"Loading Pretrained Discriminator: {pretrained_discriminator}")
             pretrained_discriminator = os.path.join(os.getcwd(),"models",pretrained_discriminator)
             self.patch_gan = torch.load(pretrained_discriminator)
         else:
-            self.patch_gan = PatchGAN(2)
-            self.patch_gan = self.patch_gan.apply(self._weights_init)
+            self.patch_gan = PatchGAN(2).to(device)
+            # self.patch_gan = self.patch_gan.apply(self._weights_init)
 
 
         # Loss component weights
@@ -82,12 +82,12 @@ class Pix2Pix:
         self.patch_gan.to(self.device)
 
 
-    def _weights_init(self,m):
-        if isinstance(m, (nn.Conv2d, nn.ConvTranspose2d)):
-            torch.nn.init.normal_(m.weight, 0.0, 0.02)
-        if isinstance(m, nn.BatchNorm2d):
-            torch.nn.init.normal_(m.weight, 0.0, 0.02)
-            torch.nn.init.constant_(m.bias, 0)
+    # def _weights_init(self,m):
+    #     if isinstance(m, (nn.Conv2d, nn.ConvTranspose2d)):
+    #         torch.nn.init.normal_(m.weight, 0.0, 0.02)
+    #     if isinstance(m, nn.BatchNorm2d):
+    #         torch.nn.init.normal_(m.weight, 0.0, 0.02)
+    #         torch.nn.init.constant_(m.bias, 0)
     @staticmethod
     def l1_loss_with_mask(x_real, x_fake,seg_map_real):
         return torch.sum(((torch.abs(x_real-x_fake))*seg_map_real))/torch.sum(seg_map_real)
