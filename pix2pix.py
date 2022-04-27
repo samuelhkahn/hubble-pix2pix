@@ -8,7 +8,7 @@ from kymatio.torch import Scattering2D
 import os
 from torchvision import transforms 
 from torchvision.transforms.functional import InterpolationMode as IMode
-
+import torchlayers as tl
 class Pix2Pix:
 
     def __init__(self,in_channels, 
@@ -36,7 +36,8 @@ class Pix2Pix:
             pretrained_generator = os.path.join(os.getcwd(),"models",pretrained_generator)
             self.gen = torch.load(pretrained_generator)
         else:
-            self.gen = Pix2PixGenerator(in_channels, out_channels).to(device)
+            self.gen = Pix2PixGenerator(in_channels, out_channels)
+            tl.build(self.gen,torch.randn(1, 1, 128, 128))
             # self.gen = self.gen.apply(self._weights_init)
 
         if len(pretrained_discriminator) != 0:
@@ -44,7 +45,7 @@ class Pix2Pix:
             pretrained_discriminator = os.path.join(os.getcwd(),"models",pretrained_discriminator)
             self.patch_gan = torch.load(pretrained_discriminator)
         else:
-            self.patch_gan = PatchGAN(2).to(device)
+            self.patch_gan = PatchGAN(2)
             # self.patch_gan = self.patch_gan.apply(self._weights_init)
 
 
