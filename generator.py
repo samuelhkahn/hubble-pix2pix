@@ -22,7 +22,8 @@ class Pix2PixGenerator(nn.Module):
 
        # Sub-Pixel Convolutions (PixelShuffle) 
         ps_blocks = []
-        ps_blocks += [ConvPixelShuffle(in_channels = 1, out_channels = 1, upscale_factor=3),
+        ps_blocks += [ConvPixelShuffle(in_channels = 1, 
+                            out_channels = 1, upscale_factor=3),
                       nn.PReLU()]
         ps_blocks += [ConvPixelShuffle(in_channels = 1, out_channels = 1, upscale_factor=2),
                       nn.PReLU()]
@@ -42,6 +43,8 @@ class Pix2PixGenerator(nn.Module):
         #     ]
 
         self.ps_blocks = nn.Sequential(*ps_blocks)
+        self.ps_blocks = nn.Sequential(
+                                nn.Upsample(scale_factor = 6, mode='nearest'))
         # encoder/donwsample convs
         self.encoders = [
             DownSampleConv(in_channels, 64, batchnorm=False),  # bs x 64 x 128 x 128
@@ -65,7 +68,7 @@ class Pix2PixGenerator(nn.Module):
             UpSampleConv(256, 64),  # bs x 64 x 128 x 128
         ]
         self.decoder_channels = [512, 512, 512, 512, 256, 128, 64]
-        self.up_conv = nn.ConvTranspose2d(64, out_channels, kernel_size=3, stride=2, padding=1,output_padding=1)
+        self.up_conv = nn.ConvTranspose2d(64, out_channels, kernel_size=4, stride=2, padding=1,output_padding=1)
         # self.up_conv = nn.Sequential(
         #                         nn.Upsample(scale_factor = 2, mode='nearest'),
         #                         nn.ReflectionPad2d(1),
