@@ -15,7 +15,8 @@ class Pix2Pix:
                       out_channels,
                       input_size,
                       device,
-                      learning_rate=0.0002, 
+                      vgg_loss_weights = [1.0,1.0,0.0,0.0,0.0],
+                      learning_rate=0.0002,
                       lambda_recon=200,
                       lambda_segmap=200,
                       lambda_vgg = 200,
@@ -62,8 +63,7 @@ class Pix2Pix:
 
         self.recon_criterion_l1 = nn.L1Loss()
         self.recon_criterion_l2 = nn.MSELoss()
-
-        self.vgg_criterion = VGGLoss(self.device)
+        self.vgg_criterion = VGGLoss(self.device,weights=vgg_loss_weights)
         self.scattering_f = Scattering2D(J=3, L=8,shape=(input_size, input_size), out_type="array",max_order=2).to(device)
 
 
@@ -122,6 +122,7 @@ class Pix2Pix:
         recon_loss = self.recon_criterion_l1(fake_images, real_images)
         vgg_loss = self.vgg_criterion(fake_images, real_images)
 
+        # vgg_loss = vgg_loss.sum()/len(weights)
         #segmap loss
         segmap_loss = self.l1_loss_with_mask(fake_images, real_images,seg_map_real)
 
