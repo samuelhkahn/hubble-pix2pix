@@ -43,8 +43,9 @@ class Pix2PixGenerator(nn.Module):
         #     ]
 
         self.ps_blocks = nn.Sequential(*ps_blocks)
-        self.ps_blocks = nn.Sequential(
-                                nn.Upsample(scale_factor = 6, mode='nearest'))
+        self.ps_blocks = nn.Sequential(nn.Upsample(scale_factor = 6, mode='nearest'))#,
+                                # nn.ReflectionPad2d(1))#,
+                               # nn.Conv2d(64, 16,kernel_size=3, stride=1, padding=0))
         # encoder/donwsample convs
         self.encoders = [
             DownSampleConv(in_channels, 64, batchnorm=False),  # bs x 64 x 128 x 128
@@ -68,7 +69,7 @@ class Pix2PixGenerator(nn.Module):
             UpSampleConv(256, 64),  # bs x 64 x 128 x 128
         ]
         self.decoder_channels = [512, 512, 512, 512, 256, 128, 64]
-        self.up_conv = nn.ConvTranspose2d(64, out_channels, kernel_size=4, stride=2, padding=1,output_padding=1)
+        self.up_conv = nn.ConvTranspose2d(64, out_channels, kernel_size=4, stride=2, padding=1,output_padding=0)
         # self.up_conv = nn.Sequential(
         #                         nn.Upsample(scale_factor = 2, mode='nearest'),
         #                         nn.ReflectionPad2d(1),
@@ -111,9 +112,11 @@ class Pix2PixGenerator(nn.Module):
             x = torch.cat((x, skip), axis=1)
         # Last decoder 
         x = self.decoders[-1](x)
+        # print(" Decoder",x.shape)
 
         #Up sample
         x = self.up_conv(x)
+        # print(" Decoder",x.shape)
 
 
         # Add input image (HSC) as "skip connection"
