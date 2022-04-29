@@ -17,15 +17,17 @@ class Pix2PixGenerator(nn.Module):
         super().__init__()
 
        # Same Convolutions
-        same_convs = [nn.Conv2d(1, 1, kernel_size=1, stride=1, padding=0) for _ in range(5)]
-        self.same_convs = nn.Sequential(*same_convs)
+        pre_conv = [nn.Conv2d(1, 1, kernel_size=1, stride=1, padding=0) for _ in range(5)]
+        self.pre_conv = nn.Sequential(*pre_conv)
 
        # Sub-Pixel Convolutions (PixelShuffle) 
-        ps_blocks = []
-        ps_blocks += [ConvPixelShuffle(in_channels = 1, 
+        ps_blocks_1 = [ConvPixelShuffle(in_channels = 1, 
                             out_channels = 1, upscale_factor=3),
                       nn.PReLU()]
-        ps_blocks += [ConvPixelShuffle(in_channels = 1, out_channels = 1, upscale_factor=2),
+
+        inter_conv = [nn.Conv2d(1, 1, kernel_size=1, stride=1, padding=0) for _ in range(5)]
+        self.inter_conv = nn.Sequential(*inter_conv)
+        ps_blocks_2 = [ConvPixelShuffle(in_channels = 1, out_channels = 1, upscale_factor=2),
                       nn.PReLU()]
 
         # for i in range(n_ps_blocks):
@@ -42,8 +44,10 @@ class Pix2PixGenerator(nn.Module):
         #         nn.PReLU(),
         #     ]
 
-        self.ps_blocks = nn.Sequential(*ps_blocks)
-        self.ps_blocks = nn.Sequential(nn.Upsample(scale_factor = 6, mode='nearest'))#,
+        self.ps_blocks_1 = nn.Sequential(*ps_blocks_1)
+        self.ps_blocks_2 = nn.Sequential(*ps_blocks_2)
+
+        # self.ps_blocks = nn.Sequential(nn.Upsample(scale_factor = 6, mode='nearest'))#,
                                 # nn.ReflectionPad2d(1))#,
                                # nn.Conv2d(64, 16,kernel_size=3, stride=1, padding=0))
         # encoder/donwsample convs
@@ -87,10 +91,15 @@ class Pix2PixGenerator(nn.Module):
         # Original Image
         # x = self.upsample(x)
         x_in = x
-        # Same convs 
-       # x = self.same_convs(x)
+        # pre convs 
+        x = self.pre_conv(x)
+
         # Encode & Skip Connections
-        x = self.ps_blocks(x)
+        x = self.ps_blocks_1(x)
+        x = self.inter_conv(x)
+        x = self.ps_blocks_2(x)
+
+        # inter  convs 
         skips_cons = []
         for encoder in self.encoders:
             # print("Before Encoder:",x.shape)
