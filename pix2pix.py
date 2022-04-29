@@ -175,7 +175,7 @@ class Pix2Pix:
 
         fake_loss = self.adversarial_criterion(fake_logits, torch.zeros_like(fake_logits))
         real_loss = self.adversarial_criterion(real_logits, torch.ones_like(real_logits))
-        return (real_loss+fake_loss)/2, fake_logits, real_logits
+        return real_loss+fake_loss, fake_logits, real_logits
 
 
     def training_step(self, real, condition, hsc_hr, seg_map_real, optimizer):
