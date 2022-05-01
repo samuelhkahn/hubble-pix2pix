@@ -72,6 +72,8 @@ def main():
 	display_step = eval(config["DISPLAY_STEPS"]["display_steps"])
 
 	lr = eval(config["LR"]["lr"])
+	disc_lr = eval(config["DISC_LR"]["disc_lr"])
+
 	lambda_recon = eval(config["LAMBDA_RECON"]["lambda_recon"])
 	lambda_segmap = eval(config["LAMBDA_SEGMAP"]["lambda_segmap"])
 	lambda_vgg = eval(config["LAMBDA_VGG"]["lambda_vgg"])
@@ -103,6 +105,7 @@ def main():
 	experiment.log_parameter("data_aug",data_aug)
 	experiment.log_parameter("display_step",display_step)
 	experiment.log_parameter("lr",lr)
+	experiment.log_parameter("disc_lr",disc_lr)
 	experiment.log_parameter("lambda_recon",lambda_recon)
 	experiment.log_parameter("lambda_vgg",lambda_vgg)
 	experiment.log_parameter("lambda_scattering",lambda_scattering)
@@ -127,6 +130,7 @@ def main():
 					 input_size =600, 
 					 device = device,
 					 learning_rate=lr,
+					 disc_learning_rate=disc_lr,
 					 vgg_loss_weights = vgg_loss_weights,
 					 lambda_recon=lambda_recon, 
 					 lambda_segmap=lambda_segmap,

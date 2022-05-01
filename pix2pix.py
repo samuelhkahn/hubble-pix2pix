@@ -17,6 +17,7 @@ class Pix2Pix:
                       device,
                       vgg_loss_weights = [1.0,1.0,0.0,0.0,0.0],
                       learning_rate=0.0002,
+                      disc_learning_rate=0.0002,
                       lambda_recon=200,
                       lambda_segmap=200,
                       lambda_vgg = 200,
@@ -52,6 +53,7 @@ class Pix2Pix:
 
         # Loss component weights
         self.lr = learning_rate
+        self.disc_lr = disc_learning_rate
         self.lambda_recon = lambda_recon
         self.lambda_vgg = lambda_vgg
         self.lambda_scattering = lambda_scattering
@@ -69,7 +71,7 @@ class Pix2Pix:
 
         #Optimizers 
         self.gen_opt = torch.optim.Adam(self.gen.parameters(), lr=self.lr)
-        self.disc_opt = torch.optim.Adam(self.patch_gan.parameters(), lr=self.lr)
+        self.disc_opt = torch.optim.Adam(self.patch_gan.parameters(), lr=self.disc_lr)
 
 
         self.hr_transforms = transforms.Compose([
