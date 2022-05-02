@@ -175,7 +175,7 @@ class Pix2Pix:
         fake_logits = self.patch_gan(fake_images,hsc_hr)
         real_logits = self.patch_gan(real_images,hsc_hr)
 
-        fake_loss = self.adversarial_criterion(fake_logits, orch.full(real_logits.size(),-100.0).to(self.device))
+        fake_loss = self.adversarial_criterion(fake_logits, torch.full(real_logits.size(),-100.0).to(self.device))
         real_loss = self.adversarial_criterion(real_logits, torch.full(real_logits.size(),100.0).to(self.device))
         return (real_loss+fake_loss)/2, fake_logits, real_logits
 
