@@ -73,7 +73,7 @@ class Pix2PixGenerator(nn.Module):
         #                         nn.Conv2d(64, 16,kernel_size=3, stride=1, padding=0))
         self.noise = BatchWiseGaussianNoise()
 
-        self.final_conv = nn.Conv2d(1, 1, kernel_size=1, stride=1, padding=0)
+        self.final_conv = nn.Conv2d(2, 1, kernel_size=1, stride=1, padding=0)
 
         self.final_layers = nn.Sequential(*[self.up_conv,self.noise,self.final_conv])
 
