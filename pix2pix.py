@@ -38,7 +38,7 @@ class Pix2Pix:
             pretrained_generator = os.path.join(os.getcwd(),"models",pretrained_generator)
             self.gen = torch.load(pretrained_generator)
         else:
-            self.gen = Pix2PixGenerator(in_channels, out_channels)
+            self.gen = Pix2PixGenerator(in_channels, out_channels,self.device)
             tl.build(self.gen,torch.randn(1, 1, 128, 128))
             # self.gen = self.gen.apply(self._weights_init)
 
@@ -142,6 +142,7 @@ class Pix2Pix:
                      + self.lambda_segmap*segmap_loss)
 
         return total_loss,adversarial_loss,recon_loss,vgg_loss,scattering_loss,segmap_loss
+     
 
     def generate_fake_images(self, conditioned_images):
         # Generate image for plotting

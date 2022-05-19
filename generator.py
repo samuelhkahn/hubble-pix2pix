@@ -8,7 +8,7 @@ from batchwise_gaussian_noise import BatchWiseGaussianNoise
 
 class Pix2PixGenerator(nn.Module):
 
-    def __init__(self, in_channels, out_channels,n_ps_blocks=2,resize_conv=True):
+    def __init__(self, in_channels, out_channels,device,n_ps_blocks=2,resize_conv=True):
         """
         Paper details:
         - Encoder: C64-C128-C256-C512-C512-C512-C512-C512
@@ -71,11 +71,11 @@ class Pix2PixGenerator(nn.Module):
         #                         nn.Upsample(scale_factor = 2, mode='nearest'),
         #                         nn.ReflectionPad2d(1),
         #                         nn.Conv2d(64, 16,kernel_size=3, stride=1, padding=0))
-        self.noise = BatchWiseGaussianNoise(zero_mean=True)
+        self.noise = BatchWiseGaussianNoise(device,zero_mean=True)
 
         self.final_conv = nn.Conv2d(1, 1, kernel_size=1, stride=1, padding=0)
 
-        
+
 
         self.tanh = nn.Tanh()
 
@@ -118,7 +118,7 @@ class Pix2PixGenerator(nn.Module):
         x = self.up_conv(x)
 
         x = self.noise(x)
-        
+
         # print("Upsample Conv: ",x.shape)
 
         # Add input image (HSC) as "skip connection"
