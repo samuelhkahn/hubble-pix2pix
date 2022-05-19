@@ -39,7 +39,7 @@ class Pix2Pix:
             self.gen = torch.load(pretrained_generator)
         else:
             self.gen = Pix2PixGenerator(in_channels, out_channels,self.device)
-            tl.build(self.gen,torch.randn(1, 1, 128, 128))
+            tl.build(self.gen,torch.randn(1, 1, 128, 128).to(device))
             # self.gen = self.gen.apply(self._weights_init)
 
         if len(pretrained_discriminator) != 0:
