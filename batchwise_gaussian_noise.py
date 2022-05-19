@@ -44,6 +44,7 @@ class BatchWiseGaussianNoise(nn.Module):
 
     def __init__(self,zero_mean = True,  is_relative_detach=True):
         super().__init__()
+        self.zero_mean = zero_mean
         self.is_relative_detach = is_relative_detach
         self.register_buffer('noise', torch.tensor(0.0))
 
