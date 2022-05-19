@@ -4,6 +4,7 @@ from down_sample_conv import DownSampleConv
 from up_sample_conv import UpSampleConv
 import torch
 from torchlayers.upsample import ConvPixelShuffle
+from batchwise_gaussian_noise import BatchWiseGaussianNoise
 
 class Pix2PixGenerator(nn.Module):
 
@@ -70,9 +71,11 @@ class Pix2PixGenerator(nn.Module):
         #                         nn.Upsample(scale_factor = 2, mode='nearest'),
         #                         nn.ReflectionPad2d(1),
         #                         nn.Conv2d(64, 16,kernel_size=3, stride=1, padding=0))
+        self.noise = BatchWiseGaussianNoise(zero_mean=True)
 
-        # self.final_conv = nn.Conv2d(1, 1, kernel_size=1, stride=1, padding=0)
+        self.final_conv = nn.Conv2d(1, 1, kernel_size=1, stride=1, padding=0)
 
+        
 
         self.tanh = nn.Tanh()
 
@@ -111,9 +114,11 @@ class Pix2PixGenerator(nn.Module):
         # print("Before PS Block: ",x.shape)
         x = self.ps_blocks(x)
         # print("After PS Block: ",x.shape)
-
         #Up sample
         x = self.up_conv(x)
+
+        x = self.noise(x)
+        
         # print("Upsample Conv: ",x.shape)
 
         # Add input image (HSC) as "skip connection"
@@ -121,6 +126,6 @@ class Pix2PixGenerator(nn.Module):
 
 
         # final conv to go from 2->1 channels
-        # x = self.final_conv(x)
+        x = self.final_conv(x)
 
         return self.tanh(x)
