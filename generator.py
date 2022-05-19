@@ -71,7 +71,7 @@ class Pix2PixGenerator(nn.Module):
         #                         nn.Upsample(scale_factor = 2, mode='nearest'),
         #                         nn.ReflectionPad2d(1),
         #                         nn.Conv2d(64, 16,kernel_size=3, stride=1, padding=0))
-        self.noise = BatchWiseGaussianNoise(device,zero_mean=True)
+        self.noise = BatchWiseGaussianNoise()
 
         self.final_conv = nn.Conv2d(1, 1, kernel_size=1, stride=1, padding=0)
 
