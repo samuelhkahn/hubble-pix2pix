@@ -19,5 +19,7 @@ class BatchWiseGaussianNoise(nn.Module):
             gaussian_noise = torch.empty(x.size()).normal_(mean=0,std=std).to(self.device)
         else:
             gaussian_noise = torch.empty(x.size()).normal_(mean=x.mean(),std=std).to(self.device)
+        print(x.device)
+        print(gaussian_noise.device)
         x = x + gaussian_noise
         return x 
