@@ -117,7 +117,7 @@ class Pix2Pix:
 
         disc_logits = self.patch_gan(fake_images,conditioned_images)
 
-        adversarial_loss = self.adversarial_criterion(disc_logits, torch.full(disc_logits.size(),100.0).to(self.device))
+        adversarial_loss = self.adversarial_criterion(disc_logits, torch.ones_like(disc_logits))
 
         # calculate reconstruction loss
         #recon_loss = self.recon_criterion_l1(fake_images, real_images)
@@ -176,8 +176,8 @@ class Pix2Pix:
         fake_logits = self.patch_gan(fake_images,hsc_hr)
         real_logits = self.patch_gan(real_images,hsc_hr)
 
-        fake_loss = self.adversarial_criterion(fake_logits, torch.full(real_logits.size(),-100.0).to(self.device))
-        real_loss = self.adversarial_criterion(real_logits, torch.full(real_logits.size(),100.0).to(self.device))
+        fake_loss = self.adversarial_criterion(fake_logits, torch.zeros_like(fake_logits))
+        real_loss = self.adversarial_criterion(real_logits, torch.ones_like(real_logits))
         return (real_loss+fake_loss)/2, fake_logits, real_logits
 
 
