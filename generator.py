@@ -75,7 +75,7 @@ class Pix2PixGenerator(nn.Module):
 
         self.final_conv = nn.Conv2d(1, 1, kernel_size=1, stride=1, padding=0)
 
-
+        self.final_layers = nn.Sequential(*[self.up_conv,self.noise,self.final_conv])
 
         self.tanh = nn.Tanh()
 
@@ -115,17 +115,18 @@ class Pix2PixGenerator(nn.Module):
         x = self.ps_blocks(x)
         # print("After PS Block: ",x.shape)
         #Up sample
-        x = self.up_conv(x)
+        x = self.final_layers(x)
+        # x = self.up_conv(x)
 
-        x = self.noise(x)
+        # x = self.noise(x)
 
-        # print("Upsample Conv: ",x.shape)
+        # # print("Upsample Conv: ",x.shape)
 
-        # Add input image (HSC) as "skip connection"
-        # x = torch.cat((x, x_in), axis=1)
+        # # Add input image (HSC) as "skip connection"
+        # # x = torch.cat((x, x_in), axis=1)
 
 
-        # final conv to go from 2->1 channels
-        x = self.final_conv(x)
+        # # final conv to go from 2->1 channels
+        # x = self.final_conv(x)
 
         return self.tanh(x)
