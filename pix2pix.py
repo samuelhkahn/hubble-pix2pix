@@ -81,8 +81,8 @@ class Pix2Pix:
         ])
 
         # put models on proper device
-        self.gen.to(self.device)
-        self.patch_gan.to(self.device)
+        self.gen = self.gen.to(self.device)
+        self.patch_gan =  self.patch_gan.to(self.device)
 
 
     # def _weights_init(self,m):
