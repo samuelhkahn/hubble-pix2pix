@@ -38,8 +38,8 @@ class Pix2Pix:
             pretrained_generator = os.path.join(os.getcwd(),"models",pretrained_generator)
             self.gen = torch.load(pretrained_generator)
         else:
-            self.gen = Pix2PixGenerator(in_channels, out_channels,self.device).to(self.device)
-            tl.build(self.gen,torch.randn(1, 1, 128, 128).to(device))
+            self.gen = Pix2PixGenerator(in_channels, out_channels,self.device)
+            tl.build(self.gen,torch.randn(1, 1, 128, 128))
             # self.gen = self.gen.apply(self._weights_init)
 
         if len(pretrained_discriminator) != 0:
@@ -81,8 +81,8 @@ class Pix2Pix:
         ])
 
         # put models on proper device
-        # self.gen = self.gen
-        # self.patch_gan =  self.patch_gan.to(self.device)
+        self.gen = self.gen.to(device)
+        self.patch_gan =  self.patch_gan.to(self.device)
 
 
     # def _weights_init(self,m):
