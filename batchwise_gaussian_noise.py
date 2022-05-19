@@ -1,35 +1,9 @@
 import torch.nn as nn
 import torch
 
-# class BatchWiseGaussianNoise(nn.Module):
-#     """Gaussian Wise Noise .
-
-#     Args:
-#         zero_mean (bool, optional): whether to generate the noise centered @ zero 
-#     """
-
-#     def __init__(self,device, zero_mean = True):
-#         super().__init__()
-#         self.device = device
-#         self.zero_mean = zero_mean
-
-#     def forward(self, x):
-#         x = x.to(self.device)
-
-#         std = x.std().item()
-
-#         if self.zero_mean:
-#             gaussian_noise = torch.empty(x.size()).normal_(mean=0,std=std).to(self.device)
-#         else:
-#             gaussian_noise = torch.empty(x.size()).normal_(mean=x.mean(),std=std).to(self.device)
-#         print(x.device)
-#         print(gaussian_noise.device)
-
-#         x = x + gaussian_noise
-#         return x
-
 class BatchWiseGaussianNoise(nn.Module):
-#     """Gaussian Wise Noise .
+#     """Gaussian Noise Layer. Standard Deviation calculated @ batchwise. If 
+#        none zero-centered mean, mean calculated batchwise. 
 
 #     Args:
 #         zero_mean (bool, optional): whether to generate the noise centered @ zero 
