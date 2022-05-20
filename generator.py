@@ -54,24 +54,20 @@ class Pix2PixGenerator(nn.Module):
             UpSampleConv(1024, 256),  # bs x 256 x 32 x 32
             UpSampleConv(512, 128),  # bs x 128 x 64 x 64
             UpSampleConv(256, 64),  # bs x 64 x 128 x 128
+            UpSampleConv(128, 32),  # bs x 64 x 128 x 128
+
         ]
         self.decoder_channels = [512, 512, 512, 512, 256, 128, 64]
 
        # Sub-Pixel Convolutions (PixelShuffle) 
         ps_blocks = []
-        ps_blocks += [ConvPixelShuffle(in_channels = 64, out_channels = 64, upscale_factor=3),
+        ps_blocks += [ConvPixelShuffle(in_channels = 32, out_channels = 32, upscale_factor=3),
                       nn.PReLU()]
-        ps_blocks += [ConvPixelShuffle(in_channels = 64, out_channels = 64, upscale_factor=2),
+        ps_blocks += [ConvPixelShuffle(in_channels = 32, out_channels = 32, upscale_factor=2),
                       nn.PReLU()]
         self.ps_blocks = nn.Sequential(*ps_blocks)
 
-        self.up_conv = nn.ConvTranspose2d(64, out_channels, kernel_size=4, stride=2, padding=1,output_padding=0)
-        # self.up_conv = nn.Sequential(
-        #                         nn.Upsample(scale_factor = 2, mode='nearest'),
-        #                         nn.ReflectionPad2d(1),
-        #                         nn.Conv2d(64, 16,kernel_size=3, stride=1, padding=0))
-
-        # self.final_conv = nn.Conv2d(1, 1, kernel_size=1, stride=1, padding=0)
+        self.final_conv = nn.Conv2d(32, 1, kernel_size=1, stride=1, padding=0)
 
 
         self.tanh = nn.Tanh()
@@ -88,10 +84,10 @@ class Pix2PixGenerator(nn.Module):
         # Encode & Skip Connections
         skips_cons = []
         for encoder in self.encoders:
-            # print("Before Encoder:",x.shape)
+            print("Before Encoder:",x.shape)
 
             x = encoder(x)
-            # print("After Encoder:",x.shape)
+            print("After Encoder:",x.shape)
 
             skips_cons.append(x)
         #Reverse for expansion phase
@@ -100,20 +96,20 @@ class Pix2PixGenerator(nn.Module):
         # Run expansion phase through decoder n-1
         decoders = self.decoders[:-1]
         for decoder, skip in zip(decoders, skips_cons):
-            # print("Before Decoder:",x.shape)
+            print("Before Decoder:",x.shape)
 
             x = decoder(x)
-            # print("After Decoder",x.shape)
+            print("After Decoder",x.shape)
             x = torch.cat((x, skip), axis=1)
-        # print("Before Last Deecoder: ",x.shape)
+        print("Before Last Deecoder: ",x.shape)
         # Last decoder 
         x = self.decoders[-1](x)
-        # print("Before PS Block: ",x.shape)
+        print("Before PS Block: ",x.shape)
         x = self.ps_blocks(x)
-        # print("After PS Block: ",x.shape)
+        print("After PS Block: ",x.shape)
 
         #Up sample
-        x = self.up_conv(x)
+        # x = self.up_conv(x)
         # print("Upsample Conv: ",x.shape)
 
         # Add input image (HSC) as "skip connection"
@@ -121,6 +117,7 @@ class Pix2PixGenerator(nn.Module):
 
 
         # final conv to go from 2->1 channels
-        # x = self.final_conv(x)
+        x = self.final_conv(x)
+        print("After final conv: ",x.shape)
 
         return self.tanh(x)
