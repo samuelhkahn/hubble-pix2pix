@@ -84,10 +84,10 @@ class Pix2PixGenerator(nn.Module):
         # Encode & Skip Connections
         skips_cons = []
         for encoder in self.encoders:
-            print("Before Encoder:",x.shape)
+            # print("Before Encoder:",x.shape)
 
             x = encoder(x)
-            print("After Encoder:",x.shape)
+            # print("After Encoder:",x.shape)
 
             skips_cons.append(x)
         #Reverse for expansion phase
@@ -96,17 +96,17 @@ class Pix2PixGenerator(nn.Module):
         # Run expansion phase through decoder n-1
         decoders = self.decoders[:-1]
         for decoder, skip in zip(decoders, skips_cons):
-            print("Before Decoder:",x.shape)
+            # print("Before Decoder:",x.shape)
 
             x = decoder(x)
-            print("After Decoder",x.shape)
+            # print("After Decoder",x.shape)
             x = torch.cat((x, skip), axis=1)
-        print("Before Last Deecoder: ",x.shape)
+        # print("Before Last Deecoder: ",x.shape)
         # Last decoder 
         x = self.decoders[-1](x)
-        print("Before PS Block: ",x.shape)
+        # print("Before PS Block: ",x.shape)
         x = self.ps_blocks(x)
-        print("After PS Block: ",x.shape)
+        # print("After PS Block: ",x.shape)
 
         #Up sample
         # x = self.up_conv(x)
@@ -118,6 +118,6 @@ class Pix2PixGenerator(nn.Module):
 
         # final conv to go from 2->1 channels
         x = self.final_conv(x)
-        print("After final conv: ",x.shape)
+        # print("After final conv: ",x.shape)
 
         return self.tanh(x)

@@ -1,6 +1,7 @@
 *png
 comet_asset_cleanup.py
 models/
+*fits
 *pt
 __pycache__
 paths.config
