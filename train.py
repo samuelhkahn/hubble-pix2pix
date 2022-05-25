@@ -155,10 +155,6 @@ def main():
 			# print(f"LR Up Shape: {lr_up.shape}")
 			# print(f"LR  Shape: {lr.shape}")
 			# print(f"HR Seg Realy Shape: {seg_map_real.shape}")
-			if cur_step%disc_update_freq==0:
-				disc_losses = pix2pix.training_step(hr_real,lr,hsc_hr,seg_map_real,"discriminator")
-				disc_loss,fake_disc_logits, real_disc_logits = disc_losses[0].item(),disc_losses[1],disc_losses[2]
-
 			losses = pix2pix.training_step(hr_real,lr,hsc_hr,seg_map_real,"generator")
 
 
@@ -168,6 +164,11 @@ def main():
 																				losses[3].item(),\
 																				losses[4].item(),\
 																				losses[5].item()
+			if cur_step%disc_update_freq==0:
+				disc_losses = pix2pix.training_step(hr_real,lr,hsc_hr,seg_map_real,"discriminator")
+				disc_loss,fake_disc_logits, real_disc_logits = disc_losses[0].item(),disc_losses[1],disc_losses[2]
+
+
 
 
 			if cur_step % display_step == 0 and cur_step > 0:
@@ -178,9 +179,18 @@ def main():
 				lr = lr[0,:,:,:].squeeze(0).cpu()
 				fake = fake_images[0,0,:,:].double().cpu()
 
+
+				fake_avg = fake_disc_logits
+				means = torch.mean(((torch.ones_like(fake_avg).flatten()-fake_avg.flatten()))**2.0)
+
 				real_disc_logits = real_disc_logits[0,0,:,:].cpu()
 
 				fake_disc_logits = fake_disc_logits[0,0,:,:].cpu()
+
+
+
+				# print("FAKE AVG: ",fake_avg)
+				print("MEANS: ",means)
 
 				img_diff = CenterCrop(600)(fake - hr).cpu().detach().numpy()
 				vmax = np.abs(img_diff).max()

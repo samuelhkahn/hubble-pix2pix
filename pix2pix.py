@@ -98,7 +98,7 @@ class Pix2Pix:
     def l2_loss_with_mask(x_real, x_fake,seg_map_real):
         return torch.sum(((x_real-x_fake)*seg_map_real)**2.0)/torch.sum(seg_map_real)
 
-    def _gen_step(self, real_images, conditioned_images,seg_map_real):
+    def _gen_step(self, real_images, conditioned_images,hsc_hr,seg_map_real):
         # Pix2Pix has adversarial and a reconstruction loss
         # First calculate the adversarial loss
         fake_images = self.gen(conditioned_images)
@@ -107,18 +107,12 @@ class Pix2Pix:
         fake_images = CenterCrop(600)(fake_images)
         real_images = CenterCrop(600)(real_images)
         seg_map_real =  CenterCrop(600)(seg_map_real)
+        hsc_hr = CenterCrop(600)(hsc_hr)
 
-        # # Upsample LR image so wecan input as second channel of discriminator
-        # conditioned_images = conditioned_images.squeeze(1)
-        # conditioned_images =  self.hr_transforms(conditioned_images)
-        # conditioned_images = conditioned_images.unsqueeze(1)
-        
-        conditioned_images = CenterCrop(600)(conditioned_images)
+        disc_logits = self.patch_gan(fake_images,hsc_hr)
 
-        disc_logits = self.patch_gan(fake_images,conditioned_images)
-
-        adversarial_loss = self.adversarial_criterion(disc_logits, torch.ones_like(disc_logits))
-
+        adversarial_loss = self.adversarial_criterion(disc_logits.flatten(), torch.ones_like(disc_logits).flatten())
+\
         # calculate reconstruction loss
         #recon_loss = self.recon_criterion_l1(fake_images, real_images)
         recon_loss = self.recon_criterion_l1(fake_images, real_images)
@@ -175,8 +169,9 @@ class Pix2Pix:
         fake_logits = self.patch_gan(fake_images,hsc_hr)
         real_logits = self.patch_gan(real_images,hsc_hr)
 
-        fake_loss = self.adversarial_criterion(fake_logits, torch.zeros_like(fake_logits))
-        real_loss = self.adversarial_criterion(real_logits, torch.ones_like(real_logits))
+
+        fake_loss = self.adversarial_criterion(fake_logits.flatten(), torch.zeros_like(fake_logits).flatten())
+        real_loss = self.adversarial_criterion(real_logits.flatten(), torch.ones_like(real_logits).flatten())
         return real_loss+fake_loss, fake_logits, real_logits
 
 
@@ -190,7 +185,7 @@ class Pix2Pix:
             self.disc_opt.step()
             return loss,fake_logits, real_logits
         elif optimizer == "generator":
-            total_loss,adversarial_loss,recon_loss,vgg_loss,scattering_loss,segmap_loss = self._gen_step(real,condition, seg_map_real)
+            total_loss,adversarial_loss,recon_loss,vgg_loss,scattering_loss,segmap_loss = self._gen_step(real,condition,hsc_hr, seg_map_real)
             self.gen_opt.zero_grad()
             total_loss.backward()
             self.gen_opt.step()
