@@ -61,7 +61,7 @@ class Pix2Pix:
         self.lambda_segmap = lambda_segmap
 
         #Loss functions 
-        self.adversarial_criterion = nn.MSELoss()
+        self.adversarial_criterion = nn.BCEWithLogitsLoss()
 
         self.recon_criterion_l1 = nn.L1Loss()
         self.recon_criterion_l2 = nn.MSELoss()
