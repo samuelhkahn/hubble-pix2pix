@@ -112,7 +112,6 @@ class Pix2Pix:
         disc_logits = self.patch_gan(fake_images,hsc_hr)
 
         adversarial_loss = self.adversarial_criterion(disc_logits.flatten(), torch.ones_like(disc_logits).flatten())
-\
         # calculate reconstruction loss
         #recon_loss = self.recon_criterion_l1(fake_images, real_images)
         recon_loss = self.recon_criterion_l1(fake_images, real_images)
