@@ -116,7 +116,7 @@ def main():
 	for i in range(5):
 		experiment.log_parameter(f"vgg_layer_{i+1}",vgg_loss_weights[i])
 
-	model_name = f"subpixel_checkerboard_free_global_lr={lr}_recon={lambda_recon}_segrecon={lambda_segmap}_vgg={lambda_vgg}_scatter={lambda_scattering}_adv={lambda_adv}_discupdate={disc_update_freq}_vgglayer_weieghts_{str(vgg_loss_weights)}"
+	model_name = f"bcegan_global_lr={lr}_recon={lambda_recon}_segrecon={lambda_segmap}_vgg={lambda_vgg}_scatter={lambda_scattering}_adv={lambda_adv}_discupdate={disc_update_freq}_vgglayer_weieghts_{str(vgg_loss_weights)}"
 	print(model_name)
 	# Create Dataloader
 	dataloader = torch.utils.data.DataLoader(
