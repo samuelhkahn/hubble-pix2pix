@@ -82,6 +82,7 @@ def main():
 
 
 	disc_update_freq = int(config["DISC_UPDATE_FREQ"]["disc_update_freq"])
+	gen_update_freq = int(config["GEN_UPDATE_FREQ"]["gen_update_freq"])
 
 	pretrained_generator = config["PRETRAINED_GENERATOR"]["pretrained_generator"]
 	pretrained_discriminator = 	config["PRETRAINED_DISCRIMINATOR"]["pretrained_discriminator"]
@@ -112,6 +113,7 @@ def main():
 	experiment.log_parameter("lambda_segrecon",lambda_segmap)
 	experiment.log_parameter("lambda_adv",lambda_adv)
 	experiment.log_parameter("disc_update_freq",disc_update_freq)
+	experiment.log_parameter("gen_update_freq",gen_update_freq)
 
 	for i in range(5):
 		experiment.log_parameter(f"vgg_layer_{i+1}",vgg_loss_weights[i])
@@ -155,15 +157,17 @@ def main():
 			# print(f"LR Up Shape: {lr_up.shape}")
 			# print(f"LR  Shape: {lr.shape}")
 			# print(f"HR Seg Realy Shape: {seg_map_real.shape}")
-			losses = pix2pix.training_step(hr_real,lr,hsc_hr,seg_map_real,"generator")
+			if cur_step%gen_update_freq==0:
+
+				losses = pix2pix.training_step(hr_real,lr,hsc_hr,seg_map_real,"generator")
 
 
-			gen_loss,adv_loss,recon_loss,vgg_loss,scattering_loss,segmap_loss = losses[0].item(),\
-																				losses[1].item(),\
-																				losses[2].item(),\
-																				losses[3].item(),\
-																				losses[4].item(),\
-																				losses[5].item()
+				gen_loss,adv_loss,recon_loss,vgg_loss,scattering_loss,segmap_loss = losses[0].item(),\
+																					losses[1].item(),\
+																					losses[2].item(),\
+																					losses[3].item(),\
+																					losses[4].item(),\
+																					losses[5].item()
 			if cur_step%disc_update_freq==0:
 				disc_losses = pix2pix.training_step(hr_real,lr,hsc_hr,seg_map_real,"discriminator")
 				disc_loss,fake_disc_logits, real_disc_logits = disc_losses[0].item(),disc_losses[1],disc_losses[2]
@@ -186,11 +190,6 @@ def main():
 				real_disc_logits = real_disc_logits[0,0,:,:].cpu()
 
 				fake_disc_logits = fake_disc_logits[0,0,:,:].cpu()
-
-
-
-				# print("FAKE AVG: ",fake_avg)
-				print("MEANS: ",means)
 
 				img_diff = CenterCrop(600)(fake - hr).cpu().detach().numpy()
 				vmax = np.abs(img_diff).max()

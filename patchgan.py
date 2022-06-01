@@ -6,9 +6,9 @@ class PatchGAN(nn.Module):
     def __init__(self, input_channels):
         super().__init__()
         self.d1 = DownSampleConv(input_channels, 64, batchnorm=False)
-        self.d2 = DownSampleConv(64, 128)
-        self.d3 = DownSampleConv(128, 256)
-        self.d4 = DownSampleConv(256, 512)
+        self.d2 = DownSampleConv(64, 128,batchnorm=False)
+        self.d3 = DownSampleConv(128, 256,batchnorm=False)
+        self.d4 = DownSampleConv(256, 512,batchnorm=False)
         self.final = nn.Conv2d(512, 1, kernel_size=1)
 
     def forward(self, x,y):
