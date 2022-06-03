@@ -9,9 +9,6 @@ import os
 from torchvision import transforms 
 from torchvision.transforms.functional import InterpolationMode as IMode
 import torchlayers as tl
-from torch.autograd import Variable
-from torch.autograd import grad as torch_grad
-
 class Pix2Pix:
 
     def __init__(self,in_channels, 
@@ -28,8 +25,7 @@ class Pix2Pix:
                       lambda_adv = 5,
                       display_step=25,
                       pretrained_generator = "",
-                      pretrained_discriminator = "" ,
-                      gp_weight=10):
+                      pretrained_discriminator = "" ):
 
         super().__init__()
 
@@ -63,7 +59,7 @@ class Pix2Pix:
         self.lambda_scattering = lambda_scattering
         self.lambda_adv = lambda_adv
         self.lambda_segmap = lambda_segmap
-        self.gp_weight = gp_weight
+
         #Loss functions 
         self.adversarial_criterion = nn.BCEWithLogitsLoss()
 
@@ -114,12 +110,8 @@ class Pix2Pix:
         hsc_hr = CenterCrop(600)(hsc_hr)
 
         disc_logits = self.patch_gan(fake_images,hsc_hr)
-        # adversarial_loss = self.adversarial_criterion(disc_logits.flatten(), torch.ones_like(disc_logits).flatten())
 
-        # Calculate loss and optimize
-        # d_generated = self.D(generated_data)
-        adversarial_loss = - disc_logits.mean()
-
+        adversarial_loss = self.adversarial_criterion(disc_logits.flatten(), torch.ones_like(disc_logits).flatten())
         # calculate reconstruction loss
         #recon_loss = self.recon_criterion_l1(fake_images, real_images)
         recon_loss = self.recon_criterion_l1(fake_images, real_images)
@@ -148,38 +140,7 @@ class Pix2Pix:
         # Generate image for plotting
         fake_images = self.gen(conditioned_images)
         return fake_images
-    def _gradient_penalty(self, real_images, fake_images,hsc_hr):
-        batch_size = real_images.size()[0]
 
-        # Calculate interpolation
-        alpha = torch.rand(batch_size, 1, 1, 1)
-        alpha = alpha.expand_as(real_images)
-        # if self.use_cuda:
-        alpha = alpha.to(self.device)
-        interpolated = alpha * real_images + (1 - alpha) * fake_images
-        interpolated = Variable(interpolated, requires_grad=True)
-        # if self.use_cuda:
-        interpolated = interpolated.to(self.device)
-
-        # Calculate probability of interpolated examples
-        prob_interpolated = self.patch_gan(interpolated,hsc_hr)
-
-        # Calculate gradients of probabilities with respect to examples
-        gradients = torch_grad(outputs=prob_interpolated, inputs=interpolated,
-                               grad_outputs=torch.ones(prob_interpolated.size()).to(self.device),
-                               create_graph=True, retain_graph=True)[0]
-
-        # Gradients have shape (batch_size, num_channels, img_width, img_height),
-        # so flatten to easily take norm per example in batch
-        gradients = gradients.view(batch_size, -1)
-        # self.losses['gradient_norm'].append(gradients.norm(2, dim=1).mean().data[0])
-
-        # Derivatives of the gradient close to 0 can cause problems because of
-        # the square root, so manually calculate norm and add epsilon
-        gradients_norm = torch.sqrt(torch.sum(gradients ** 2, dim=1) + 1e-12)
-
-        # Return gradient penalty
-        return self.gp_weight * ((gradients_norm - 1) ** 2).mean()
     def _disc_step(self, real_images, conditioned_images,hsc_hr):
         fake_images = self.gen(conditioned_images).detach()
 
@@ -206,14 +167,11 @@ class Pix2Pix:
         ### It will be worth trying it though as an expereiment!
         fake_logits = self.patch_gan(fake_images,hsc_hr)
         real_logits = self.patch_gan(real_images,hsc_hr)
-        gradient_penalty = self._gradient_penalty(real_images, fake_images,hsc_hr)
 
-        # Create total loss and optimize
-        wgan_loss = fake_logits.mean() - real_logits.mean() + gradient_penalty
 
-        # fake_loss = self.adversarial_criterion(fake_logits.flatten(), torch.zeros_like(fake_logits).flatten())
-        # real_loss = self.adversarial_criterion(real_logits.flatten(), torch.ones_like(real_logits).flatten())
-        return wgan_loss, fake_logits, real_logits
+        fake_loss = self.adversarial_criterion(fake_logits.flatten(), torch.zeros_like(fake_logits).flatten())
+        real_loss = self.adversarial_criterion(real_logits.flatten(), torch.ones_like(real_logits).flatten())
+        return real_loss+fake_loss, fake_logits, real_logits
 
 
     def training_step(self, real, condition, hsc_hr, seg_map_real, optimizer):
