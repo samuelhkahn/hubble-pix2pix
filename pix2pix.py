@@ -101,7 +101,7 @@ class Pix2Pix:
     def _gen_step(self, real_images, conditioned_images,hsc_hr,seg_map_real):
         # Pix2Pix has adversarial and a reconstruction loss
         # First calculate the adversarial loss
-        fake_images = self.gen(conditioned_images)
+        fake_images = self.gen(conditioned_images, identity_map = True)
 
         #Crop off sides so not computed in loss 
         fake_images = CenterCrop(600)(fake_images)
@@ -138,11 +138,11 @@ class Pix2Pix:
 
     def generate_fake_images(self, conditioned_images):
         # Generate image for plotting
-        fake_images = self.gen(conditioned_images)
+        fake_images = self.gen(conditioned_images, identity_map = False)
         return fake_images
 
     def _disc_step(self, real_images, conditioned_images,hsc_hr):
-        fake_images = self.gen(conditioned_images).detach()
+        fake_images = self.gen(conditioned_images, identity_map = True).detach()
 
         #Crop off sides so not computed in loss 
         fake_images = CenterCrop(600)(fake_images)

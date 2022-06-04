@@ -4,7 +4,7 @@ from down_sample_conv import DownSampleConv
 from up_sample_conv import UpSampleConv
 import torch
 from torchlayers.upsample import ConvPixelShuffle
-
+from gaussian_noise import GaussianNoise
 class Pix2PixGenerator(nn.Module):
 
     def __init__(self, in_channels, out_channels,n_ps_blocks=2,resize_conv=True):
@@ -68,14 +68,14 @@ class Pix2PixGenerator(nn.Module):
         self.ps_blocks = nn.Sequential(*ps_blocks)
 
         self.final_conv = nn.Conv2d(32, 1, kernel_size=1, stride=1, padding=0)
-
+        self.noise = GaussianNoise()
 
         self.tanh = nn.Tanh()
 
         self.encoders = nn.ModuleList(self.encoders)
         self.decoders = nn.ModuleList(self.decoders)
 
-    def forward(self, x):
+    def forward(self, x,identity_map=True):
         # Original Image
         # x = self.upsample(x)
         x_in = x
@@ -118,6 +118,9 @@ class Pix2PixGenerator(nn.Module):
 
         # final conv to go from 2->1 channels
         x = self.final_conv(x)
+        
+        x = self.noise(x,identity_map)
+
         # print("After final conv: ",x.shape)
 
         return self.tanh(x)

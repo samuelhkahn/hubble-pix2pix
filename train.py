@@ -190,7 +190,7 @@ def main():
 
 
 				# print("FAKE AVG: ",fake_avg)
-				print("MEANS: ",means)
+				# print("MEANS: ",means)
 
 				img_diff = CenterCrop(600)(fake - hr).cpu().detach().numpy()
 				vmax = np.abs(img_diff).max()
