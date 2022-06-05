@@ -203,6 +203,7 @@ def main():
 				log_figure(CenterCrop(100)(lr).detach().numpy(),"100x100 Conditioned Image (HSC)",experiment)
 				log_figure(CenterCrop(600)(fake).detach().numpy(),"600x600 Generated Image (SR)",experiment)
 				log_figure(CenterCrop(600)(fake_images_noise).detach().numpy(),"600x600 Generated Image + Noise (SR)",experiment)
+				log_figure(CenterCrop(600)(fake_images_noise).detach().numpy(),"600x600 Generated Image + Noise Log(SR)",experiment,stretch="log")
 				log_figure(CenterCrop(600)(hr).detach().numpy(),"600x600 Real Image (HST)",experiment)
 
 				log_figure(real_disc_logits.detach().numpy(),"Real Disc Logits",experiment)
