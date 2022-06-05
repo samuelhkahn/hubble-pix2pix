@@ -39,7 +39,7 @@ class Pix2Pix:
             self.gen = torch.load(pretrained_generator)
         else:
             self.gen = Pix2PixGenerator(in_channels, out_channels)
-            tl.build(self.gen,torch.randn(1, 1, 128, 128))
+            tl.build(self.gen,torch.randn(1, 1, 128, 128),True)
             # self.gen = self.gen.apply(self._weights_init)
 
         if len(pretrained_discriminator) != 0:
@@ -136,9 +136,9 @@ class Pix2Pix:
 
         return total_loss,adversarial_loss,recon_loss,vgg_loss,scattering_loss,segmap_loss
 
-    def generate_fake_images(self, conditioned_images):
+    def generate_fake_images(self, conditioned_images,identity_map = False):
         # Generate image for plotting
-        fake_images = self.gen(conditioned_images, identity_map = False)
+        fake_images = self.gen(conditioned_images, identity_map = identity_map)
         return fake_images
 
     def _disc_step(self, real_images, conditioned_images,hsc_hr):

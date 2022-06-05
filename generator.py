@@ -75,7 +75,7 @@ class Pix2PixGenerator(nn.Module):
         self.encoders = nn.ModuleList(self.encoders)
         self.decoders = nn.ModuleList(self.decoders)
 
-    def forward(self, x,identity_map=True):
+    def forward(self, x,identity_map):
         # Original Image
         # x = self.upsample(x)
         x_in = x
@@ -118,9 +118,9 @@ class Pix2PixGenerator(nn.Module):
 
         # final conv to go from 2->1 channels
         x = self.final_conv(x)
-        
+        x = self.tanh(x)
         x = self.noise(x,identity_map)
 
         # print("After final conv: ",x.shape)
 
-        return self.tanh(x)
+        return x

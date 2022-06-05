@@ -172,12 +172,14 @@ def main():
 
 
 			if cur_step % display_step == 0 and cur_step > 0:
-				fake_images = pix2pix.generate_fake_images(lr)
+				fake_images_noise = pix2pix.generate_fake_images(lr,identity_map=False)
+				fake_images = pix2pix.generate_fake_images(lr,identity_map=True)
 
 				print('Step: {}, Generator loss: {:.5f}, Discriminator loss: {:.5f}'.format(cur_step,gen_loss, disc_loss))
 				hr = hr_real[0,:,:,:].squeeze(0).cpu()
 				lr = lr[0,:,:,:].squeeze(0).cpu()
 				fake = fake_images[0,0,:,:].double().cpu()
+				fake_images_noise = fake_images_noise[0,0,:,:].double().cpu()
 
 
 				fake_avg = fake_disc_logits
@@ -200,6 +202,7 @@ def main():
 				log_figure(fake.detach().numpy(),"Generated Image",experiment)
 				log_figure(CenterCrop(100)(lr).detach().numpy(),"100x100 Conditioned Image (HSC)",experiment)
 				log_figure(CenterCrop(600)(fake).detach().numpy(),"600x600 Generated Image (SR)",experiment)
+				log_figure(CenterCrop(600)(fake_images_noise).detach().numpy(),"600x600 Generated Image + Noise (SR)",experiment)
 				log_figure(CenterCrop(600)(hr).detach().numpy(),"600x600 Real Image (HST)",experiment)
 
 				log_figure(real_disc_logits.detach().numpy(),"Real Disc Logits",experiment)

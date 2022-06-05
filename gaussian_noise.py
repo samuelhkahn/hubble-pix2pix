@@ -2,11 +2,11 @@ import torch.nn as nn
 import torch
 import numpy as np
 class GaussianNoise(nn.Module):
-#     """Gaussian Noise Layer. Standard Deviation calculated @ batchwise. If 
-#        none zero-centered mean, mean calculated batchwise. 
+#     """Gaussian Noise Layer. Standard Deviation calculated @ instace level. 
+#        If identity_map is True, no noise applied. 
 
 #     Args:
-#         zero_mean (bool, optional): whether to generate the noise centered @ zero 
+#          None
 #     """
 
     def __init__(self):
@@ -16,12 +16,8 @@ class GaussianNoise(nn.Module):
     def forward(self, x,identity_map):
         if identity_map == True:
             return x
-
-
         std = x.std(axis=(1,2))
         noise = torch.randn_like(x)
         stds = std[:,np.newaxis,np.newaxis]*noise
-        print(x)
         x = x + stds
-        print(x)
         return x 
