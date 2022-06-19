@@ -188,7 +188,7 @@ def main():
 				hsc_hr_val = hsc_hr_val.unsqueeze(1).to(device)
 				lr_val = lr_val.unsqueeze(1).to(device) # condition
 				seg_map_real_val = seg_map_real_val.unsqueeze(1).to(device)
-				val_losses = pix2pix.validation_step(hr_real_val,lr,hsc_hr_val,seg_map_real_val,"generator")
+				val_losses = pix2pix.validation_step(hr_real_val,lr_val,hsc_hr_val,seg_map_real_val,"generator")
 
 
 				gen_val_loss,adv_val_loss,recon_val_loss,vgg_val_loss,scattering_val_loss,segmap_val_loss = val_losses[0].item(),\
@@ -197,10 +197,10 @@ def main():
 																					val_losses[3].item(),\
 																					val_losses[4].item(),\
 																					val_losses[5].item()
-				disc_val_losses = pix2pix.validation_step(hr_real,lr,hsc_hr,seg_map_real,"discriminator")
+				disc_val_losses = pix2pix.validation_step(hr_real_val,lr,hsc_hr_val,seg_map_real_val,"discriminator")
 				disc_val_loss,fake_disc_val_logits, real_disc_val_logits = disc_val_losses[0].item(),disc_val_losses[1],disc_val_losses[2]
 				fake_val_images = pix2pix.generate_fake_images(lr_val,identity_map=True)
-				print('Step: {}, Generator loss: {:.5f}, Discriminator loss: {:.5f}'.format(cur_step,gen_val_loss, disc_loss))
+				print('Step: {}, Generator loss: {:.5f}, Discriminator loss: {:.5f}'.format(cur_step,gen_val_loss, disc_val_loss))
 				hr_val = hr_real_val[0,:,:,:].squeeze(0).cpu()
 				lr_val = lr_val[0,:,:,:].squeeze(0).cpu()
 				fake_val = fake_val_images[0,0,:,:].double().cpu()
