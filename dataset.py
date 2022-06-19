@@ -225,15 +225,15 @@ class SR_HST_HSC_Dataset(Dataset):
 
 
         if self.data_aug == True:
-            if random.random() > 0.5:
+            # if random.random() > 0.5:
 
-                # Rotate 
-                rotation = random.randint(0,359)
-                # 2 = BiLinear
-                hsc_array = TF.rotate(hsc_array,rotation,
-                                    interpolation = TF.InterpolationMode.BILINEAR)
-                hst_array = TF.rotate(hst_array,rotation,
-                                    interpolation = TF.InterpolationMode.BILINEAR)
+            #     # Rotate 
+            #     rotation = random.randint(0,359)
+            #     # 2 = BiLinear
+            #     hsc_array = TF.rotate(hsc_array,rotation,
+            #                         interpolation = TF.InterpolationMode.BILINEAR)
+            #     hst_array = TF.rotate(hst_array,rotation,
+            #                         interpolation = TF.InterpolationMode.BILINEAR)
 
         ## Flip Augmentations
             if random.random() > 0.5:
