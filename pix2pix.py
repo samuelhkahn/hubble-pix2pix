@@ -189,3 +189,13 @@ class Pix2Pix:
             total_loss.backward()
             self.gen_opt.step()
             return total_loss,adversarial_loss,recon_loss,vgg_loss,scattering_loss,segmap_loss
+
+    def validation_step(self, real, condition, hsc_hr, seg_map_real, optimizer):
+
+        loss = None
+        if optimizer == "discriminator":
+            loss,fake_logits, real_logits = self._disc_step(real,condition, hsc_hr)
+            return loss,fake_logits, real_logits
+        elif optimizer == "generator":
+            total_loss,adversarial_loss,recon_loss,vgg_loss,scattering_loss,segmap_loss = self._gen_step(real,condition,hsc_hr, seg_map_real)
+            return total_loss,adversarial_loss,recon_loss,vgg_loss,scattering_loss,segmap_loss

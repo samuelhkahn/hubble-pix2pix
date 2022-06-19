@@ -52,8 +52,10 @@ def main():
 	config.read(config_file)
 
 	# Configuration Information
-	hst_path = config["DEFAULT"]["hst_path"]
-	hsc_path = config["DEFAULT"]["hsc_path"]
+	hst_path_train = config["DEFAULT"]["hst_path_train"]
+	hsc_path_train = config["DEFAULT"]["hsc_path_train"]
+	hst_path_val = config["DEFAULT"]["hst_path_val"]
+	hsc_path_val = config["DEFAULT"]["hsc_path_val"]
 
 	hst_dim = int(config["HST_DIM"]["hst_dim"])
 	hsc_dim = int(config["HSC_DIM"]["hsc_dim"])
@@ -118,12 +120,19 @@ def main():
 
 	model_name = f"gaussian_bcegan_global_lr={lr}_recon={lambda_recon}_segrecon={lambda_segmap}_vgg={lambda_vgg}_scatter={lambda_scattering}_adv={lambda_adv}_discupdate={disc_update_freq}_vgglayer_weieghts_{str(vgg_loss_weights)}"
 	print(model_name)
-	# Create Dataloader
-	dataloader = torch.utils.data.DataLoader(
-	    SR_HST_HSC_Dataset(hst_path = hst_path , hsc_path = hsc_path, hr_size=[hst_dim, hst_dim], 
-	    	lr_size=[hsc_dim, hsc_dim], transform_type = "ds9_scale",data_aug = data_aug,experiment = experiment), 
-	    batch_size=batch_size, pin_memory=True, shuffle=True, collate_fn = collate_fn)
 
+
+	# Create Dataloader
+	dataloader_train = torch.utils.data.DataLoader(
+	    SR_HST_HSC_Dataset(hst_path = hst_path_train , hsc_path = hsc_path_train, hr_size=[hst_dim, hst_dim], 
+	    	lr_size=[hsc_dim, hsc_dim], transform_type = "ds9_scale",data_aug = data_aug,experiment = experiment), 
+	    	batch_size=batch_size, pin_memory=True, shuffle=True, collate_fn = collate_fn)
+
+	dataloader_val = torch.utils.data.DataLoader(
+	    SR_HST_HSC_Dataset(hst_path = hst_path_val , hsc_path = hsc_path_val, hr_size=[hst_dim, hst_dim], 
+	    	lr_size=[hsc_dim, hsc_dim], transform_type = "ds9_scale",data_aug = data_aug,experiment = experiment), 
+	    	batch_size=batch_size, pin_memory=True, shuffle=True, collate_fn = collate_fn)
+	dataloader_val = iter(dataloader_val)
 
 	pix2pix = Pix2Pix(in_channels = 1, 
 					 out_channels = 1,
@@ -144,7 +153,7 @@ def main():
 	cur_step = 0
 
 	while cur_step < total_steps:
-		for hr_real,lr,hsc_hr, seg_map_real in tqdm(dataloader, position=0):
+		for hr_real,lr,hsc_hr, seg_map_real in tqdm(dataloader_train, position=0):
 			# Conv2d expects (n_samples, channels, height, width)
 			# So add the channel dimension
 			hr_real = hr_real.unsqueeze(1).to(device)
@@ -172,42 +181,43 @@ def main():
 
 
 			if cur_step % display_step == 0 and cur_step > 0:
-				fake_images_noise = pix2pix.generate_fake_images(lr,identity_map=False)
-				fake_images = pix2pix.generate_fake_images(lr,identity_map=True)
+				hr_real_val,lr_val,hsc_hr_val, seg_map_real_val = next(dataloader_val)
 
-				print('Step: {}, Generator loss: {:.5f}, Discriminator loss: {:.5f}'.format(cur_step,gen_loss, disc_loss))
-				hr = hr_real[0,:,:,:].squeeze(0).cpu()
-				lr = lr[0,:,:,:].squeeze(0).cpu()
-				fake = fake_images[0,0,:,:].double().cpu()
-				fake_images_noise = fake_images_noise[0,0,:,:].double().cpu()
+				hr_real_val = hr_real_val.unsqueeze(1).to(device)
+				hsc_hr_val = hsc_hr_val.unsqueeze(1).to(device)
+				lr_val = lr_val.unsqueeze(1).to(device) # condition
+				seg_map_real_val = seg_map_real_val.unsqueeze(1).to(device)
+				val_losses = pix2pix.validation_step(hr_real_val,lr,hsc_hr_val,seg_map_real_val,"generator")
 
 
-				fake_avg = fake_disc_logits
-				means = torch.mean(((torch.ones_like(fake_avg).flatten()-fake_avg.flatten()))**2.0)
-
-				real_disc_logits = real_disc_logits[0,0,:,:].cpu()
-
-				fake_disc_logits = fake_disc_logits[0,0,:,:].cpu()
+				gen_val_loss,adv_val_loss,recon_val_loss,vgg_val_loss,scattering_val_loss,segmap_val_loss = val_losses[0].item(),\
+																					val_losses[1].item(),\
+																					val_losses[2].item(),\
+																					val_losses[3].item(),\
+																					val_losses[4].item(),\
+																					val_losses[5].item()
+				disc_val_losses = pix2pix.validation_step(hr_real,lr,hsc_hr,seg_map_real,"discriminator")
+				disc_val_loss,fake_disc_val_logits, real_disc_val_logits = disc_val_losses[0].item(),disc_val_losses[1],disc_val_losses[2]
+				fake_val_images = pix2pix.generate_fake_images(lr_val,identity_map=True)
+				print('Step: {}, Generator loss: {:.5f}, Discriminator loss: {:.5f}'.format(cur_step,gen_val_loss, disc_loss))
+				hr_val = hr_real_val[0,:,:,:].squeeze(0).cpu()
+				lr_val = lr_val[0,:,:,:].squeeze(0).cpu()
+				fake_val = fake_val_images[0,0,:,:].double().cpu()
+				real_disc_val_logits = real_disc_val_logits[0,0,:,:].cpu()
+				fake_disc_val_logits = fake_disc_val_logits[0,0,:,:].cpu()
 
 
 
 				# print("FAKE AVG: ",fake_avg)
 				# print("MEANS: ",means)
 
-				img_diff = CenterCrop(600)(fake - hr).cpu().detach().numpy()
+				img_diff = CenterCrop(600)(fake_val - hr_val).cpu().detach().numpy()
 				vmax = np.abs(img_diff).max()
-
-				log_figure(hr.detach().numpy(),"HST Full Image",experiment)
-				log_figure(lr.detach().numpy(),"LR Image",experiment)
-				log_figure(fake.detach().numpy(),"Generated Image",experiment)
-				log_figure(CenterCrop(100)(lr).detach().numpy(),"100x100 Conditioned Image (HSC)",experiment)
-				log_figure(CenterCrop(600)(fake).detach().numpy(),"600x600 Generated Image (SR)",experiment)
-				log_figure(CenterCrop(600)(fake_images_noise).detach().numpy(),"600x600 Generated Image + Noise (SR)",experiment)
-				log_figure(CenterCrop(600)(fake_images_noise).detach().numpy(),"600x600 Generated Image + Noise Log(SR)",experiment,stretch="log")
-				log_figure(CenterCrop(600)(hr).detach().numpy(),"600x600 Real Image (HST)",experiment)
-
-				log_figure(real_disc_logits.detach().numpy(),"Real Disc Logits",experiment)
-				log_figure(fake_disc_logits.detach().numpy(),"Fake Disc Logits",experiment)
+				log_figure(CenterCrop(100)(lr_val).detach().numpy(),"100x100 Conditioned Val Image (HSC)",experiment)
+				log_figure(CenterCrop(600)(fake_val).detach().numpy(),"600x600 Generated Val Image (SR)",experiment)
+				log_figure(CenterCrop(600)(hr_val).detach().numpy(),"600x600 Real Val Image (HST)",experiment)
+				log_figure(real_disc_val_logits.detach().numpy(),"Real Disc Val Logits",experiment)
+				log_figure(real_disc_val_logits.detach().numpy(),"Fake Disc Val Logits",experiment)
 
 				log_figure(img_diff,"Paired Image Difference",experiment,cmap="bwr_r",set_lims=True,lims=[-vmax,vmax])
 
@@ -219,9 +229,17 @@ def main():
 				experiment.log_metric("L1 Scattereing Loss",scattering_loss)
 				experiment.log_metric("L1 Reconstriction Segmap Loss",segmap_loss)
 				experiment.log_metric("L1 Segmap/L1 Recon Loss",segmap_loss/recon_loss)
-
-
 				experiment.log_metric("Adversarial Loss",adv_loss)
+
+
+				experiment.log_metric("Generator Val Loss",gen_val_loss)
+				experiment.log_metric("Discriminator Val Loss",disc_val_loss)
+				experiment.log_metric("VGG Val Loss",vgg_val_loss)
+				experiment.log_metric("L1 Val Reconstriction Loss",recon_val_loss)
+				experiment.log_metric("L1 Val Scattereing Loss",scattering_val_loss)
+				experiment.log_metric("L1 Val Reconstriction Segmap Loss",segmap_val_loss)
+				experiment.log_metric("L1 Val Segmap/L1 Recon Loss",segmap_val_loss/recon_val_loss)
+				experiment.log_metric("Adversarial Loss",adv_val_loss)
 
 
 			if cur_step % save_steps == 0 and cur_step > 0:
