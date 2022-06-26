@@ -119,7 +119,7 @@ def main():
 	for i in range(5):
 		experiment.log_parameter(f"vgg_layer_{i+1}",vgg_loss_weights[i])
 
-	model_name = f"gaussian_bcegan_{identifier}_global_lr={lr}_recon={lambda_recon}_segrecon={lambda_segmap}_vgg={lambda_vgg}_scatter={lambda_scattering}_adv={lambda_adv}_discupdate={disc_update_freq}_vgglayer_weieghts_{str(vgg_loss_weights)}"
+	model_name = f"regularized_gaussian_bcegan_{identifier}_global_lr={lr}_recon={lambda_recon}_segrecon={lambda_segmap}_vgg={lambda_vgg}_scatter={lambda_scattering}_adv={lambda_adv}_discupdate={disc_update_freq}_vgglayer_weieghts_{str(vgg_loss_weights)}"
 	print(model_name)
 
 

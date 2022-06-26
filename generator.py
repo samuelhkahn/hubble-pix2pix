@@ -51,10 +51,10 @@ class Pix2PixGenerator(nn.Module):
             UpSampleConv(1024, 512, dropout=True),  # bs x 512 x 4 x 4
             UpSampleConv(1024, 512, dropout=True),  # bs x 512 x 8 x 8
             # UpSampleConv(1024, 512),  # bs x 512 x 16 x 16
-            UpSampleConv(1024, 256),  # bs x 256 x 32 x 32
-            UpSampleConv(512, 128),  # bs x 128 x 64 x 64
-            UpSampleConv(256, 64),  # bs x 64 x 128 x 128
-            UpSampleConv(128, 32),  # bs x 64 x 128 x 128
+            UpSampleConv(1024, 256, dropout=True),  # bs x 256 x 32 x 32
+            UpSampleConv(512, 128, dropout=True),  # bs x 128 x 64 x 64
+            UpSampleConv(256, 64, dropout=True),  # bs x 64 x 128 x 128
+            UpSampleConv(128, 32, dropout=True),  # bs x 64 x 128 x 128
 
         ]
         self.decoder_channels = [512, 512, 512, 512, 256, 128, 64]
