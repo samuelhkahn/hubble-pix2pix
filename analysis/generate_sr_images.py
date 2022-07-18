@@ -1,8 +1,9 @@
 import sys
+sys.path.append("..")
+import configparser
 import os
 import numpy as np
 from astropy.io import fits
-import os
 from comet_ml import Experiment
 import torch
 from torchvision import models
@@ -23,16 +24,20 @@ def main():
     config = configparser.ConfigParser()
     config.read(config_file)
 
+
+    # Adding Comet Logging
+    api_key = os.environ['COMET_ML_ASTRO_API_KEY']
+
     experiment = Experiment(
         api_key=api_key,
         project_name="Pix2Pix Image Translation: HSC->HST",
         workspace="samkahn-astro",
     )
-    pretrained_generator = "gen_pix2pixsr_subpixel_checkerboard_free_global_lr=0.0002_recon=200_segrecon=0_vgg=1_scatter=0.0_adv=1.0_discupdate=1_vgglayer_weieghts_[0.0, 1.0, 1.0, 0.0, 0.0]_checkpoint_425000.pt"                               
+    pretrained_generator = config["PRETRAINED_GENERATOR"]["pretrained_generator"]
 
     print(f"Loading Pretrained Generator: {pretrained_generator}")
     pretrained_generator = os.path.join(os.getcwd(),pretrained_generator)
-    gen = torch.load(pretrained_generator,map_location=torch.device('cpu'))
+    gen = torch.load(pretrained_generator,map_location=torch.device(device))
 
     # Create Dataloader
 
@@ -40,8 +45,8 @@ def main():
     hsc_path_val = config["DEFAULT"]["hsc_path_val"]
 
 
-    hst_dim = 600
-    hsc_dim = 100
+    hst_dim = int(config["HST_DIM"]["hst_dim"])
+    hsc_dim = int(config["HSC_DIM"]["hsc_dim"])
     batch_size=1
 
     sr_hst_hsc_dataset = SR_HST_HSC_Dataset(hst_path = hst_path_val , hsc_path = hsc_path_val, hr_size=[hst_dim, hst_dim], 
@@ -64,9 +69,9 @@ def main():
 
         lr = sr_hst_hsc_dataset.ds9_unscaling(CenterCrop(100)(lr.squeeze(0).squeeze(0)),offset=1)
 
-        fits.PrimaryHDU(data=sr).writeto(f"sr-comparison-analysis/results/sr{index}.fits")
-        fits.PrimaryHDU(data=hr_real).writeto(f"sr-comparison-analysis/results/hst{index}.fits")
-        fits.PrimaryHDU(data=lr).writeto(f"sr-comparison-analysis/results/hsc{index}.fits")
+        fits.PrimaryHDU(data=sr).writeto(f"results/sr{index}.fits")
+        fits.PrimaryHDU(data=hr_real).writeto(f"results/hst{index}.fits")
+        fits.PrimaryHDU(data=lr).writeto(f"results/hsc{index}.fits")
         index+=1
 if __name__=="__main__":
     main()
