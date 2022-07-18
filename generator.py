@@ -119,7 +119,7 @@ class Pix2PixGenerator(nn.Module):
         # final conv to go from 2->1 channels
         x = self.final_conv(x)
         x = self.tanh(x)
-        x = self.noise(x,identity_map)
+        # x = self.noise(x,identity_map)
 
         # print("After final conv: ",x.shape)
 

@@ -189,7 +189,7 @@ class SR_HST_HSC_Dataset(Dataset):
 
     @staticmethod
     def ds9_unscaling(x, a=1000,offset = 0 ):
-        return (((a + 1)**x - 1) / a) + offset
+        return (((a + 1)**(x+offset) - 1) / a)
 
     @staticmethod
     def clip(arr, use_data=True):
