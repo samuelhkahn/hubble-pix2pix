@@ -7,4 +7,12 @@ models/
 *pt
 __pycache__
 paths.config
-*ipynb
+.ipynb_checkpoints/
+VGG Loss.ipynb
+analysis/.ipynb_checkpoints/
+initial-analysis.ipynb
+wavelet_example.ipynb
+HST Background Noise.ipynb
+Image Upscaling.ipynb
+ImageResizing (1).ipynb
+ImageResizing.ipynb
