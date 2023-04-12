@@ -11,6 +11,7 @@ from photutils.segmentation import deblend_sources
 from photutils.segmentation import SourceCatalog
 from photutils import SegmentationImage
 import time
+from astropy.io.fits import Header
 
 #scaling
 def ds9_scaling(x, a=1000,offset = 0):
@@ -147,6 +148,10 @@ def main():
     data_hsc = hdu_hsc[0].data
     data_sr  = hdu_sr[0].data
 
+    #get headers hst_header=sr_header
+    hst_header = hdu_hst[0].header
+    hsc_header = hdu_hsc[0].header
+
 
     #print statistics of each object
     if(args.verbose):
@@ -168,8 +173,9 @@ def main():
 
     #save the detection image data
     #use the segmentation image from HST
-    jpui.WriteSourceCatalogImages(args.hst+'.output.fits',data_hst, segm_hst, cdata_hst)
-    jpui.WriteSourceCatalogImages(args.sr +'.output.fits',data_sr,  segm_hst, cdata_sr)
+    print(args.hst+'.output.fits')
+    jpui.WriteSourceCatalogImages(args.hst+'.output.fits',data_hst, segm_hst, cdata_hst,header=Header(hst_header))
+    jpui.WriteSourceCatalogImages(args.sr +'.output.fits',data_sr,  segm_hst, cdata_sr,header=Header(hst_header))
 
 #run the script
 if __name__=="__main__":
