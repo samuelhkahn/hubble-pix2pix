@@ -1,14 +1,14 @@
-# NEO: Neural Enhancement Operator
+# Neo
 
 **Astronomical image super-resolution using conditional GANs**
 
-NEO enhances ground-based telescope imagery to approach space-based resolution using a Pix2Pix conditional GAN architecture. It was developed to translate images from the Hyper Suprime-Cam (HSC) on the Subaru Telescope to match the resolution of the Hubble Space Telescope (HST), achieving a **6x super-resolution** factor.
+Neo enhances ground-based telescope imagery to approach space-based resolution using a Pix2Pix conditional GAN architecture. It was developed to translate images from the Hyper Suprime-Cam (HSC) on the Subaru Telescope to match the resolution of the Hubble Space Telescope (HST), achieving a **6x super-resolution** factor.
 
 ---
 
 ## Overview
 
-Ground-based telescopes are limited by atmospheric seeing, producing images with lower spatial resolution compared to space-based observatories. NEO bridges this gap by learning the mapping from low-resolution (HSC) to high-resolution (HST) astronomical images using deep learning.
+Ground-based telescopes are limited by atmospheric seeing, producing images with lower spatial resolution compared to space-based observatories. Neo bridges this gap by learning the mapping from low-resolution (HSC) to high-resolution (HST) astronomical images using deep learning.
 
 ### Key Features
 
@@ -83,7 +83,7 @@ requirements.txt              # Python dependencies
 
 ```bash
 # Clone the repository
-git clone <repo-url> neo
+git clone git@github.com:samuelhkahn/neo.git
 cd neo
 
 # Create a virtual environment
@@ -175,7 +175,7 @@ with torch.no_grad():
 
 ### Intensity Scaling
 
-NEO uses **DS9 logarithmic scaling** (the default and recommended transform) to normalize astronomical image intensities:
+Neo uses **DS9 logarithmic scaling** (the default and recommended transform) to normalize astronomical image intensities:
 
 ```
 scaled = log10(a * x + 1) / log10(a + 1)

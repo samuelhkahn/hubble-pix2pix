@@ -1,5 +1,5 @@
 """
-NEO: Neural Enhancement Operator
+Neo: Photometric Super-Resolution
 
 A deep learning framework for astronomical image super-resolution using
 Pix2Pix conditional GANs. Designed to enhance ground-based telescope imagery
@@ -7,7 +7,8 @@ Pix2Pix conditional GANs. Designed to enhance ground-based telescope imagery
 Space Telescope).
 
 Reference:
-    Kahn et al. - Pix2Pix Image Translation for Astronomical Super-Resolution
+    Kahn et al. - Neo: Photometric Super-Resolution for Improving Galaxy
+    Morphological Measurements using Conditional Generative Adversarial Networks
 """
 
 __version__ = "1.0.0"

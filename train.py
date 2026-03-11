@@ -1,4 +1,4 @@
-"""Training script for the NEO super-resolution model.
+"""Training script for the Neo super-resolution model.
 
 Trains a Pix2Pix conditional GAN to translate ground-based HSC images to
 space-based HST quality using paired FITS image cutouts.
