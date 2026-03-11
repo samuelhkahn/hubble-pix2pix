@@ -1,7 +1,39 @@
-*png
-comet_asset_cleanup.py
-models/
-*pt
-__pycache__
+# Model checkpoints (root-level only, not neo/models/ source code)
+/models/
+*.pt
+
+# Data files
+*.fits
+*.zip
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Jupyter
+.ipynb_checkpoints/
+
+# IDE
+.vscode/
+.idea/
+
+# Environment
+.env
+venv/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Images
+*.png
+
+# Config files with real paths (keep example.ini)
 paths.config
-*ipynb
+analysis/sr_paths.config

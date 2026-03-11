@@ -1,0 +1,14 @@
+torch>=1.9.0
+torchvision>=0.10.0
+torchlayers>=0.1.1
+kymatio>=0.3.0
+comet-ml>=3.31.0
+astropy>=5.0
+sep>=1.2.0
+scikit-image>=0.19.0
+scikit-learn>=1.0
+opencv-python>=4.5.0
+matplotlib>=3.5.0
+numpy>=1.21.0
+scipy>=1.7.0
+tqdm>=4.62.0
