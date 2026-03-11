@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "Neo: Photometric Super-Resolution for Improving Galaxy Morphological Measurements"
+type: software
+authors:
+  - family-names: "Kahn"
+    given-names: "Samuel"
+    # orcid: "https://orcid.org/0000-0000-0000-0000"  # TODO: add ORCID
+repository-code: "https://github.com/samuelhkahn/hubble-pix2pix"
+license: MIT
+version: "1.0.0"
+date-released: "2024-01-01"  # TODO: update with actual release date
+# doi: "10.xxxx/xxxxx"  # TODO: add DOI when available
+# preferred-citation:
+#   type: article
+#   authors:
+#     - family-names: "Kahn"
+#       given-names: "Samuel"
+#   title: "Neo: Photometric Super-Resolution for Improving Galaxy Morphological Measurements using Conditional Generative Adversarial Networks"
+#   journal: ""  # TODO: add journal/conference name
+#   year: 2024
+#   doi: ""  # TODO: add paper DOI
