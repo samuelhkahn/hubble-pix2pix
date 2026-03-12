@@ -134,9 +134,8 @@ class Pix2Pix:
         # raw logits, not probabilities).
         self.adversarial_criterion = nn.BCEWithLogitsLoss()
 
-        # Pixel-wise reconstruction losses.
+        # Pixel-wise reconstruction loss.
         self.recon_criterion_l1 = nn.L1Loss()
-        self.recon_criterion_l2 = nn.MSELoss()
 
         # VGG-19 perceptual loss (multi-scale feature matching).
         self.vgg_criterion = VGGLoss(self.device, weights=vgg_loss_weights)
@@ -193,21 +192,6 @@ class Pix2Pix:
             / torch.sum(seg_map_real)
         )
 
-    @staticmethod
-    def l2_loss_with_mask(
-        x_real: torch.Tensor,
-        x_fake: torch.Tensor,
-        seg_map_real: torch.Tensor,
-    ) -> torch.Tensor:
-        """L2 loss weighted by a binary segmentation mask.
-
-        Same masking logic as ``l1_loss_with_mask`` but with squared errors.
-        """
-        return (
-            torch.sum(((x_real - x_fake) * seg_map_real) ** 2.0)
-            / torch.sum(seg_map_real)
-        )
-
     # ------------------------------------------------------------------
     # Generator forward / loss
     # ------------------------------------------------------------------
@@ -237,7 +221,7 @@ class Pix2Pix:
             scattering_loss, segmap_loss)``.
         """
         # Generate super-resolved image from the low-resolution input.
-        fake_images = self.gen(conditioned_images, identity_map=True)
+        fake_images = self.gen(conditioned_images)
 
         # Center crop all tensors to 600x600 to remove border padding.
         fake_images = CenterCrop(600)(fake_images)
@@ -305,18 +289,16 @@ class Pix2Pix:
     def generate_fake_images(
         self,
         conditioned_images: torch.Tensor,
-        identity_map: bool = False,
     ) -> torch.Tensor:
         """Generate super-resolved images from low-resolution inputs.
 
         Args:
             conditioned_images: Low-resolution HSC input ``(B, 1, 128, 128)``.
-            identity_map: If ``True``, skip noise injection (use at inference).
 
         Returns:
             Super-resolved output ``(B, 1, 768, 768)``.
         """
-        return self.gen(conditioned_images, identity_map=identity_map)
+        return self.gen(conditioned_images)
 
     # ------------------------------------------------------------------
     # Discriminator forward / loss
@@ -344,7 +326,7 @@ class Pix2Pix:
             Tuple of ``(disc_loss, fake_logits, real_logits)``.
         """
         # Generate fakes and detach to prevent generator gradient updates.
-        fake_images = self.gen(conditioned_images, identity_map=True).detach()
+        fake_images = self.gen(conditioned_images).detach()
 
         # Center crop to 600x600 (same crop used in generator loss).
         fake_images = CenterCrop(600)(fake_images)

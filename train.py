@@ -245,9 +245,7 @@ def main() -> None:
                 real_disc_val_logits = disc_val_losses[2]
 
                 # Generate super-resolved validation images for visualization.
-                fake_val_images = pix2pix.generate_fake_images(
-                    lr_val, identity_map=True
-                )
+                fake_val_images = pix2pix.generate_fake_images(lr_val)
                 print(
                     f"Step: {cur_step}, "
                     f"Generator loss: {gen_val_loss:.5f}, "

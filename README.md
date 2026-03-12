@@ -1,9 +1,6 @@
 # Neo: Photometric Super-Resolution for Astronomical Imagery
 
-<!-- TODO: Uncomment when badges are available
-[![arXiv](https://img.shields.io/badge/arXiv-XXXX.XXXXX-b31b1b.svg)](https://arxiv.org/abs/XXXX.XXXXX)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
--->
 
 **Neo** enhances ground-based telescope imagery to approach space-based resolution using a Pix2Pix conditional GAN.  It translates images from the Hyper Suprime-Cam (HSC) on the Subaru Telescope to match the resolution of the Hubble Space Telescope (HST), achieving **6x super-resolution** (128x128 -> 768x768).
 
@@ -11,7 +8,7 @@
 >
 > Samuel Kahn et al.
 >
-> <!-- [Paper](https://arxiv.org/abs/XXXX.XXXXX) | --> [Code](https://github.com/samuelhkahn/hubble-pix2pix)
+> [Code](https://github.com/samuelhkahn/hubble-pix2pix)
 
 ---
 
@@ -38,23 +35,6 @@ The generator is trained with a composite loss combining five complementary obje
 | **VGG-19 Perceptual** | `lambda_vgg` | Multi-scale feature matching via pretrained VGG-19 |
 | **Wavelet Scattering** | `lambda_scattering` | Preserves multi-scale morphological structure (Kymatio) |
 | **Segmentation-Masked L1** | `lambda_segmap` | Prioritizes reconstruction of detected astronomical sources (SEP) |
-
----
-
-## Results
-
-<!-- TODO: Fill in with actual experimental results -->
-
-| Metric | Bicubic | Neo (Ours) |
-|--------|---------|------------|
-| PSNR (dB) | -- | -- |
-| SSIM | -- | -- |
-| FID | -- | -- |
-
-<!-- TODO: Add sample images
-### Visual Examples
-![Comparison](figures/comparison.png)
--->
 
 ---
 
@@ -130,7 +110,7 @@ generator.eval()
 # Super-resolve a low-resolution HSC image.
 # Input: (1, 1, 128, 128) -> Output: (1, 1, 768, 768)
 with torch.no_grad():
-    sr_image = generator(hsc_input.to(device), identity_map=True)
+    sr_image = generator(hsc_input.to(device))
 ```
 
 ---
@@ -147,7 +127,6 @@ neo/
 │   ├── patchgan.py           # PatchGAN discriminator
 │   ├── down_sample_conv.py   # Strided conv blocks (encoder + discriminator)
 │   ├── up_sample_conv.py     # Transpose conv blocks (decoder)
-│   ├── gaussian_noise.py     # Gaussian noise injection layer
 │   ├── vgg19.py              # VGG-19 feature extractor
 │   └── vgg19_loss.py         # VGG perceptual loss module
 ├── data/

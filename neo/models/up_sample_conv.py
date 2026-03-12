@@ -4,7 +4,7 @@ Each block doubles the spatial dimensions using either a transposed
 convolution or a resize convolution (nearest-neighbor upsample + conv).
 The sequence is:
 
-    ``ConvTranspose2d(stride=2) -> [BatchNorm] -> [Dropout(0.5)] -> [ReLU]``
+    ``ConvTranspose2d(stride=2) -> [BatchNorm] -> [Dropout(0.5)]``
 
 The first three decoder blocks use 50% dropout for regularization,
 following the original pix2pix design.
@@ -17,8 +17,8 @@ import torch.nn as nn
 class UpSampleConv(nn.Module):
     """Transposed convolution block for spatial upsampling.
 
-    Applies ``ConvTranspose2d -> [BatchNorm2d] -> [Dropout(0.5)] -> [ReLU]``
-    where each optional component can be toggled.
+    Applies ``ConvTranspose2d -> [BatchNorm2d] -> [Dropout(0.5)]`` where
+    each optional component can be toggled.
 
     Optionally supports resize convolution (nearest-neighbor interpolation
     followed by a regular convolution) as an alternative to transposed
@@ -33,7 +33,6 @@ class UpSampleConv(nn.Module):
         strides: Stride for upsampling (default: 2, doubles spatial dims).
         padding: Padding size (default: 1).
         output_padding: Additional output padding for ConvTranspose2d.
-        activation: Whether to apply ReLU activation.
         batchnorm: Whether to apply batch normalization.
         dropout: Whether to apply 50% dropout (used in the first 3 decoder
             blocks for regularization).
@@ -49,13 +48,11 @@ class UpSampleConv(nn.Module):
         strides: int = 2,
         padding: int = 1,
         output_padding: int = 0,
-        activation: bool = True,
         batchnorm: bool = True,
         dropout: bool = False,
         resize_convolution: bool = False,
     ) -> None:
         super().__init__()
-        self.activation = activation
         self.batchnorm = batchnorm
         self.dropout = dropout
 
@@ -78,10 +75,6 @@ class UpSampleConv(nn.Module):
 
         if batchnorm:
             self.bn = nn.BatchNorm2d(out_channels)
-
-        if activation:
-            # ReLU with inplace=True to save memory.
-            self.act = nn.ReLU(inplace=True)
 
         if dropout:
             # 50% spatial dropout for regularization (zeroes entire channels).

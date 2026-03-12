@@ -30,7 +30,6 @@ import torch.nn as nn
 from torchlayers.upsample import ConvPixelShuffle
 
 from neo.models.down_sample_conv import DownSampleConv
-from neo.models.gaussian_noise import GaussianNoise
 from neo.models.up_sample_conv import UpSampleConv
 
 
@@ -99,20 +98,15 @@ class Pix2PixGenerator(nn.Module):
         # 1x1 convolution to project from 32 feature channels to 1 output channel.
         self.final_conv = nn.Conv2d(32, 1, kernel_size=1, stride=1, padding=0)
 
-        # Gaussian noise layer for data augmentation during training.
-        self.noise = GaussianNoise()
-
         # Tanh activation constrains output to [-1, 1], matching the DS9-scaled
         # input range.
         self.tanh = nn.Tanh()
 
-    def forward(self, x: torch.Tensor, identity_map: bool) -> torch.Tensor:
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Forward pass through the generator.
 
         Args:
             x: Low-resolution input tensor of shape ``(B, 1, 128, 128)``.
-            identity_map: If ``True``, skip noise injection (use at inference
-                time to get deterministic outputs).
 
         Returns:
             Super-resolved output tensor of shape ``(B, 1, 768, 768)``.
